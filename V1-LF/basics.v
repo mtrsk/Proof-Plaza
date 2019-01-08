@@ -166,16 +166,16 @@ Proof. simpl. reflexivity. Qed.
 (*--------------
   Compound Types
   --------------
-  The types we have defined so far are examples of "enumerated types": the  ir definitions explicitly enumerate a finite set of elements, each of wh  ich is just a bare constructor. Here is a more interesting type definiti  won, where one of the constructors takes an argument: 
+  The types we have defined so far are examples of "enumerated types": the  ir definitions explicitly enumerate a finite set of elements, each of wh  ich is just a bare constructor. Here is a more interesting type definiti  won, where one of the constructors takes an argument:
  *)
 
 (*
   > reg, green, and blue are the constructors of rgb;
   > black, white, and primary are the constructors of color;
-  > the expression red belongs to the set rgb, as do the expressions green    and blue;
+  > the expression red belongs to the set rgb, as do the expressions green and blue;
   > the expressions black and white belong to the set color;
-  > if p is an expression belonging to the set rgb, then primary p (pronou    nced "the constructor primary applied to the argument p") is an expres    sion belonging to the set color; and
-  > expressions formed in these ways are the only ones belonging to the se    ts rgb and color.
+  > if p is an expression belonging to the set rgb, then primary p (pronounced "the constructor primary applied to the argument p") is an expression belonging to the set color; and
+  > expressions formed in these ways are the only ones belonging to the sets rgb and color.
  *)
 
 Inductive rgb : Type :=
@@ -515,5 +515,97 @@ Proof.
 (* The destruct generates two subgoals, which we must then prove, separately, in order to get Coq to accept the theorem. The annotation "as [| n']" is called an intro pattern. It tells Coq what variable names to introduce in each subgoal. In general, what goes between the square brackets is a list of lists of names, separated by |. In this case, the first component is empty, since the O constructor is nullary (it doesn't have any arguments). The second component gives a single name, n', since S is a unary constructor.
 The - signs on the second and third lines are called bullets, and they mark the parts of the proof that correspond to each generated subgoal. The proof script that comes after a bullet is the entire proof for a subgoal. In this example, each of the subgoals is easily proved by a single use of reflexivity, which itself performs some simplification — e.g., the first one simplifies beq_nat (S n' + 1) 0 to false by first rewriting (S n' + 1) to S (n' + 1), then unfolding beq_nat, and then simplifying the match. *)
 
+(* The destruct tactic can be used with any inductively defined datatype. For example, we use it next to prove that boolean negation is involutive — i.e., that negation is its own inverse. *)
 
+Theorem notb_involutive : forall b : bool,
+  notb (notb b) = b.
+Proof. intros b. destruct b.
+  - reflexivity.
+  - reflexivity. Qed.
 
+(*  Note that the destruct here has no as clause because none of the subcases of the destruct need to bind any variables, so there is no need to specify any names. (We could also have written as [|], or as [].) In fact, we can omit the as clause from any destruct and Coq will fill in variable names automatically. This is generally considered bad style, since Coq often makes confusing choices of names when left to its own devices.
+
+It is sometimes useful to invoke destruct inside a subgoal, generating yet more proof obligations. In this case, we use different kinds of bullets to mark goals on different "levels." For example: *)
+
+Theorem andb_commutative : forall (b : bool) (c : bool), (b && c) = (c && b).
+Proof.
+  intros b c. destruct b.
+  - destruct c.
+    + reflexivity.
+    + reflexivity.
+  - destruct c.
+    + reflexivity.
+    + reflexivity. Qed.
+
+(* Each pair of calls to reflexivity corresponds to the subgoals that were generated after the execution of the destruct c line right above it.
+Besides - and +, we can use * (asterisk) as a third kind of bullet. We can also enclose sub-proofs in curly braces, which is useful in case we ever encounter a proof that generates more than three levels of subgoals: *)
+
+Theorem andb_commutative' : forall b c, andb b c = andb c b.
+Proof.
+  intros b c. destruct b.
+  { destruct c.
+    { reflexivity. }
+    { reflexivity. } }
+  { destruct c.
+    { reflexivity. }
+    { reflexivity. } }
+Qed.
+
+(*  Since curly braces mark both the beginning and the end of a proof, they can be used for multiple subgoal levels, as this example shows. Furthermore, curly braces allow us to reuse the same bullet shapes at multiple levels in a proof: *)
+
+Theorem andb3_exchange:
+  forall b c d : bool, (b && c) && d = (b && d) && c.
+Proof.
+  intros b c d. destruct b.
+  - destruct c.
+    { destruct d. 
+      + reflexivity.
+      + reflexivity. }
+    { destruct d.
+      + reflexivity.
+      + reflexivity. }
+  - destruct c.
+    { destruct d. 
+      + reflexivity.
+      + reflexivity. }
+    { destruct d.
+      + reflexivity.
+      + reflexivity. }
+Qed.
+
+(*  Before closing the chapter, let's mention one final convenience. As you may have noticed, many proofs perform case analysis on a variable right after introducing it:
+
+       intros x y. destruct y as [|y].
+
+This pattern is so common that Coq provides a shorthand for it: we can perform case analysis on a variable when introducing it by using an intro pattern instead of a variable name. For instance, here is a shorter proof of the plus_1_neq_0 theorem above. *)
+
+Theorem plus_1_neq_0' : forall n : nat,
+  beq_nat (n + 1) 0 = false.
+Proof.
+  intros [|n'].
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+(*  If there are no arguments to name, we can just write []. *)
+
+Theorem andb_commutative'' :
+  forall b c, b && c = c && b.
+Proof.
+  intros [] [].
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+  - reflexivity.
+Qed.
+
+(* -----------------------------------
+   Exercise: 2 stars (andb_true_elim2)
+   -----------------------------------
+
+   Prove the following claim, marking cases (and subcases) with bullets when you use destruct. *)
+
+Theorem andb_true_elim2 : forall b c : bool,
+  (b && c) = true -> c = true.
+Proof.
+  (* FILL IN HERE *) Admitted.

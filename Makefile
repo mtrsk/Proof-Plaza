@@ -1,2 +1,2 @@
 all:
-	coqc Basics/*.v
+	coqc V1-LF/*.v
