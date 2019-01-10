@@ -1,11 +1,11 @@
 all:
-	$(MAKE) check
+	$(MAKE) check_LF
 	$(MAKE) clean
 
-check:
-	coqc V1-LF/*.v
+check_LF:
+	coqc -Q LF/ LF LF/*.v
 
 clean:
-	rm V1-LF/*.vo
-	rm V1-LF/*.glob
+	rm LF/*.vo
+	rm LF/*.glob
 

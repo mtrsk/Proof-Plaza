@@ -1252,7 +1252,7 @@ Proof.
   rewrite -> H.
   reflexivity.
 Qed.
---
+
 (** Now state and prove a theorem [negation_fn_applied_twice] similar
     to the previous one but where the second hypothesis says that the
     function [f] has the property that [f x = negb x].*)
