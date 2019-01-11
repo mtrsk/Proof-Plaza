@@ -209,7 +209,11 @@ Fixpoint double (n:nat) :=
 
 Lemma double_plus : forall n, double n = n + n .
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  induction n as [| n' IHn'].
+  - reflexivity.
+  - simpl. rewrite -> IHn'. rewrite -> plus_n_Sm. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, optional (evenb_S)  *)
@@ -223,7 +227,11 @@ Proof.
 Theorem evenb_S : forall n : nat,
   evenb (S n) = negb (evenb n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  induction n as [| n' IHn'].
+  - simpl. reflexivity.
+  - rewrite -> IHn'. rewrite -> negb_involutive. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star (destruct_induction)  *)
@@ -460,7 +468,15 @@ Definition manual_grade_for_plus_comm_informal : option (prod nat string) := Non
 Theorem plus_swap : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p. 
+  assert (H : n + m = m + n).
+  {
+    rewrite <- plus_comm. reflexivity.
+  }
+  rewrite -> plus_assoc.
+  rewrite -> H.
+  rewrite <- plus_assoc. reflexivity.
+Qed.
 
 (** Now prove commutativity of multiplication.  (You will probably
     need to define and prove a separate subsidiary theorem to be used
@@ -470,7 +486,14 @@ Proof.
 Theorem mult_comm : forall m n : nat,
   m * n = n * m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros m n.
+  induction m as [| m' IHm'].
+  - simpl. rewrite -> mult_0_r. reflexivity.
+  - simpl.
+    rewrite <- mult_n_Sm.
+    rewrite -> plus_comm.
+    rewrite <- IHm'. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (more_exercises)  *)
