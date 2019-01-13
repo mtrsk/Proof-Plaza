@@ -386,7 +386,7 @@ Definition bag := natlist.
 Fixpoint count (v:nat) (s:bag) : nat :=
   match s with
     | nil => 0
-    | h :: t => match (beq_nat v h) with
+    | h :: t => match (v =? h) with
               | true => 1 + count v t
               | false => count v t
               end
@@ -445,7 +445,7 @@ Proof. reflexivity. Qed.
 Fixpoint remove_one (v:nat) (s:bag) : bag :=
   match s with
     | nil => nil
-    | h :: t => match (beq_nat v h) with
+    | h :: t => match (v =? h) with
                 | true => t
                 | false => h :: (remove_one v t)
               end
@@ -470,7 +470,7 @@ Proof. reflexivity. Qed.
 Fixpoint remove_all (v:nat) (s:bag) : bag :=
   match s with
     | nil => nil
-    | h :: t => match (beq_nat v h) with
+    | h :: t => match (v =? h) with
                 | true => remove_all v t
                 | false => h :: (remove_all v t)
               end
@@ -906,7 +906,7 @@ Fixpoint eqblist (l1 l2 : natlist) : bool :=
     | nil, nil => true
     | nil, _ => false
     | _, nil => false
-    | h1 :: t1 , h2 :: t2 => match (beq_nat h1 h2) with
+    | h1 :: t1 , h2 :: t2 => match (h1 =? h2) with
                             | true => eqblist t1 t2
                             | false => false
                           end
@@ -931,7 +931,7 @@ Proof.
   - reflexivity.
   - simpl. rewrite <- IHl'.  destruct n.
     + reflexivity.
-    + simpl. rewrite <- beq_nat_refl. reflexivity.
+    + simpl. rewrite <- eqb_refl. reflexivity.
 Qed.
 (** [] *)
 
@@ -945,7 +945,9 @@ Qed.
 Theorem count_member_nonzero : forall (s : bag),
   1 <=? (count 1 (1 :: s)) = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros s.
+  simpl. reflexivity.
+Qed.
 (** [] *)
 
 (** The following lemma about [leb] might help you in the next exercise. *)
@@ -965,7 +967,13 @@ Proof.
 Theorem remove_does_not_increase_count: forall (s : bag),
   (count 0 (remove_one 0 s)) <=? (count 0 s) = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros s.
+  induction s as [| n s' IHs'].
+  - reflexivity.
+  - simpl. destruct n.
+    + rewrite -> leb_n_Sn. reflexivity.
+    + simpl. rewrite -> IHs'. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard, optional (bag_count_sum)  
@@ -1077,17 +1085,20 @@ Definition option_elim (d : nat) (o : natoption) : nat :=
     Using the same idea, fix the [hd] function from earlier so we don't
     have to pass a default element for the [nil] case.  *)
 
-Definition hd_error (l : natlist) : natoption
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition hd_error (l : natlist) : natoption :=
+  match l with
+    | nil => None
+    | h :: t => Some h
+  end.
 
 Example test_hd_error1 : hd_error [] = None.
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example test_hd_error2 : hd_error [1] = Some 1.
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
 Example test_hd_error3 : hd_error [5;6] = Some 5.
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (option_elim_hd)  
@@ -1097,7 +1108,11 @@ Example test_hd_error3 : hd_error [5;6] = Some 5.
 Theorem option_elim_hd : forall (l:natlist) (default:nat),
   hd default l = option_elim default (hd_error l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l default.
+  destruct l as [| n l'].
+  - reflexivity.
+  - reflexivity.
+Qed.
 (** [] *)
 
 End NatList.
@@ -1131,7 +1146,9 @@ Definition eqb_id (x1 x2 : id) :=
 (** **** Exercise: 1 star, standard (eqb_id_refl)  *)
 Theorem eqb_id_refl : forall x, true = eqb_id x x.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros x. destruct x.
+  - simpl. rewrite <- eqb_refl. reflexivity.
+Qed.
 (** [] *)
 
 (** Now we define the type of partial maps: *)
@@ -1177,7 +1194,9 @@ Theorem update_eq :
   forall (d : partial_map) (x : id) (v: nat),
     find x (update d x v) = Some v.
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros d x v. destruct x.
+  - simpl. rewrite <- eqb_refl. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (update_neq)  *)
@@ -1185,7 +1204,10 @@ Theorem update_neq :
   forall (d : partial_map) (x y : id) (o: nat),
     eqb_id x y = false -> find x (update d y o) = find x d.
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros d x y o.
+  intros H.
+  simpl. rewrite -> H. reflexivity.
+Qed.
 (** [] *)
 End PartialMap.
 
