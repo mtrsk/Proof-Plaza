@@ -488,17 +488,20 @@ Proof. reflexivity. Qed.
 Example test_remove_all4:  count 5 (remove_all 5 [2;1;5;4;5;1;4;5;1;4]) = 0.
 Proof. reflexivity. Qed.
 
-Fixpoint subset (s1:bag) (s2:bag) : bool
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint subset (s1:bag) (s2:bag) : bool :=
+  match s1 with
+    | nil => true
+    | h :: t => match ( leb (count h s1) (count h s2)) with
+                | false => false
+                | true => subset t s2
+              end
+  end.
 
 Example test_subset1:              subset [1;2] [2;1;4;1] = true.
- (* FILL IN HERE *) Admitted.
-Example test_subset2:              subset [1;2;2] [2;1;4;1] = false.
- (* FILL IN HERE *) Admitted.
+Proof. reflexivity. Qed.
 
-(* Do not modify the following line: *)
-Definition manual_grade_for_bag_theorem : option (prod nat string) := None.
-(** [] *)
+Example test_subset2:              subset [1;2;2] [2;1;4;1] = false.
+Proof. reflexivity. Qed.
 
 (** **** Exercise: 2 stars, standard, recommended (bag_theorem)
 
@@ -842,17 +845,29 @@ Proof.
 Theorem app_nil_r : forall l : natlist,
   l ++ [] = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l.
+  induction l as [| n l' IHl' ].
+  - reflexivity.
+  - simpl. rewrite -> IHl'. reflexivity.
+Qed.
 
 Theorem rev_app_distr: forall l1 l2 : natlist,
   rev (l1 ++ l2) = rev l2 ++ rev l1.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l1 l2.
+  induction l1 as [| n l1' IHl1' ].
+  - simpl. rewrite -> app_nil_r. reflexivity.
+  - simpl. rewrite -> IHl1'. rewrite -> app_assoc. reflexivity.
+Qed.
 
 Theorem rev_involutive : forall l : natlist,
   rev (rev l) = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l.
+  induction l as [| n l' IHl' ].
+  - reflexivity.
+  - simpl. rewrite -> rev_app_distr. rewrite -> IHl'. reflexivity.
+Qed.
 
 (** There is a short solution to the next one.  If you find yourself
     getting tangled up, step back and try to look for a simpler
@@ -861,14 +876,18 @@ Proof.
 Theorem app_assoc4 : forall l1 l2 l3 l4 : natlist,
   l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l1 l2 l3 l4.
+  induction l4 as [| n l4' IHl4' ].
+  - rewrite -> app_nil_r, app_nil_r. rewrite -> app_assoc. reflexivity.
+  - rewrite -> app_assoc, app_assoc. reflexivity.
+Qed.
 
 (** An exercise about your implementation of [nonzeros]: *)
 
 Lemma nonzeros_app : forall l1 l2 : natlist,
   nonzeros (l1 ++ l2) = (nonzeros l1) ++ (nonzeros l2).
 Proof.
-  (* FILL IN HERE *) Admitted.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (eqblist)  
