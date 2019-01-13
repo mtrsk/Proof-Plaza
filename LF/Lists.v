@@ -877,9 +877,7 @@ Theorem app_assoc4 : forall l1 l2 l3 l4 : natlist,
   l1 ++ (l2 ++ (l3 ++ l4)) = ((l1 ++ l2) ++ l3) ++ l4.
 Proof.
   intros l1 l2 l3 l4.
-  induction l4 as [| n l4' IHl4' ].
-  - rewrite -> app_nil_r, app_nil_r. rewrite -> app_assoc. reflexivity.
-  - rewrite -> app_assoc, app_assoc. reflexivity.
+  rewrite -> app_assoc, app_assoc. reflexivity.
 Qed.
 
 (** An exercise about your implementation of [nonzeros]: *)
