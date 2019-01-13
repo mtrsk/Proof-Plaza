@@ -435,8 +435,9 @@ Proof.
     whereas the informal proof reminds the reader several times where
     things stand). *)
 
-(** **** Exercise: 2 stars, advanced, recommended (plus_comm_informal)  *)
-(** Translate your solution for [plus_comm] into an informal proof:
+(** **** Exercise: 2 stars, advanced, recommended (plus_comm_informal)  
+
+    Translate your solution for [plus_comm] into an informal proof:
 
     Theorem: Addition is commutative.
 
@@ -444,19 +445,21 @@ Proof.
 *)
 
 (* Do not modify the following line: *)
-Definition manual_grade_for_plus_comm_informal : option (prod nat string) := None.
+Definition manual_grade_for_plus_comm_informal : option (nat*string) := None.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (beq_nat_refl_informal)  *)
-(** Write an informal proof of the following theorem, using the
+(** **** Exercise: 2 stars, standard, optional (eqb_refl_informal)  
+
+    Write an informal proof of the following theorem, using the
     informal proof of [plus_assoc] as a model.  Don't just
     paraphrase the Coq tactics into English!
 
-    Theorem: [true = beq_nat n n] for any [n].
+    Theorem: [true = n =? n] for any [n].
 
     Proof: (* FILL IN HERE *)
-*)
-(** [] *)
+
+    [] *)
+
 
 (* ################################################################# *)
 (** * More Exercises *)
@@ -508,7 +511,7 @@ Qed.
 Check leb.
 
 Theorem leb_refl : forall n:nat,
-  true = leb n n.
+  true = (n <=? n).
 Proof.
   intros n. induction n as [| n' IHn' ].
   - reflexivity.
@@ -516,7 +519,7 @@ Proof.
 Qed.
 
 Theorem zero_nbeq_S : forall n:nat,
-  beq_nat 0 (S n) = false.
+  0 =? (S n) = false.
 Proof.
   intros n. destruct n as [| n' ].
   - reflexivity.
@@ -532,7 +535,7 @@ Proof.
 Qed.
 
 Theorem plus_ble_compat_l : forall n m p : nat,
-  leb n m = true -> leb (p + n) (p + m) = true.
+  n <=? m = true -> (p + n) <=? (p + m) = true.
 Proof.
   intros n m p.
   intros H.
@@ -544,7 +547,7 @@ Proof.
 Qed.
 
 Theorem S_nbeq_0 : forall n:nat,
-  beq_nat (S n) 0 = false.
+  (S n) =? 0 = false.
 Proof.
   intros n.
   destruct n as [| n' ].
@@ -618,21 +621,23 @@ Proof.
 Qed.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (beq_nat_refl)  *)
-(** Prove the following theorem.  (Putting the [true] on the left-hand
+(** **** Exercise: 2 stars, standard, optional (eqb_refl)  
+
+    Prove the following theorem.  (Putting the [true] on the left-hand
     side of the equality may look odd, but this is how the theorem is
     stated in the Coq standard library, so we follow suit.  Rewriting
     works equally well in either direction, so we will have no problem
     using the theorem no matter which way we state it.) *)
 
-Theorem beq_nat_refl : forall n : nat,
-  true = beq_nat n n.
+Theorem eqb_refl : forall n : nat,
+  true = (n =? n).
 Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 2 stars, optional (plus_swap')  *)
-(** The [replace] tactic allows you to specify a particular subterm to
+(** **** Exercise: 2 stars, standard, optional (plus_swap')  
+
+    The [replace] tactic allows you to specify a particular subterm to
    rewrite and what you want it rewritten to: [replace (t) with (u)]
    replaces (all copies of) expression [t] in the goal by expression
    [u], and generates [t = u] as an additional subgoal. This is often
@@ -647,8 +652,9 @@ Proof.
   (* FILL IN HERE *) Admitted.
 (** [] *)
 
-(** **** Exercise: 3 stars, recommended (binary_commute)  *)
-(** Recall the [incr] and [bin_to_nat] functions that you
+(** **** Exercise: 3 stars, standard, recommended (binary_commute)  
+
+    Recall the [incr] and [bin_to_nat] functions that you
     wrote for the [binary] exercise in the [Basics] chapter.  Prove
     that the following diagram commutes:
 
@@ -675,39 +681,63 @@ Proof.
 (* FILL IN HERE *)
 
 (* Do not modify the following line: *)
-Definition manual_grade_for_binary_commute : option (prod nat string) := None.
+Definition manual_grade_for_binary_commute : option (nat*string) := None.
 (** [] *)
 
-(** **** Exercise: 5 stars, advanced (binary_inverse)  *)
-(** This exercise is a continuation of the previous exercise about
-    binary numbers.  You will need your definitions and theorems from
-    there to complete this one; please copy them to this file to make
-    it self contained for grading.
+(** **** Exercise: 5 stars, advanced (binary_inverse)  
+
+    This is a further continuation of the previous exercises about
+    binary numbers.  You may find you need to go back and change your
+    earlier definitions to get things to work here.
 
     (a) First, write a function to convert natural numbers to binary
-        numbers.  Then prove that starting with any natural number,
-        converting to binary, then converting back yields the same
-        natural number you started with.
+        numbers. *)
 
-    (b) You might naturally think that we should also prove the
-        opposite direction: that starting with a binary number,
-        converting to a natural, and then back to binary yields the
-        same number we started with.  However, this is not true!
-        Explain what the problem is.
+Fixpoint nat_to_bin (n:nat) : bin
+  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 
-    (c) Define a "direct" normalization function -- i.e., a function
-        [normalize] from binary numbers to binary numbers such that,
-        for any binary number b, converting to a natural and then back
-        to binary yields [(normalize b)].  Prove it.  (Warning: This
-        part is tricky!)
+(** Prove that, if we start with any [nat], convert it to binary, and
+    convert it back, we get the same [nat] we started with.  (Hint: If
+    your definition of [nat_to_bin] involved any extra functions, you
+    may need to prove a subsidiary lemma showing how such functions
+    relate to [nat_to_bin].) *)
 
-    Again, feel free to change your earlier definitions if this helps
-    here. *)
+Theorem nat_bin_nat : forall n, bin_to_nat (nat_to_bin n) = n.
+Proof.
+  (* FILL IN HERE *) Admitted.
+
+(* Do not modify the following line: *)
+Definition manual_grade_for_binary_inverse_a : option (nat*string) := None.
+
+(** (b) One might naturally expect that we should also prove the
+        opposite direction -- that starting with a binary number,
+        converting to a natural, and then back to binary should yield
+        the same number we started with.  However, this is not the
+        case!  Explain (in a comment) what the problem is. *)
 
 (* FILL IN HERE *)
 
 (* Do not modify the following line: *)
-Definition manual_grade_for_binary_inverse : option (prod nat string) := None.
+Definition manual_grade_for_binary_inverse_b : option (nat*string) := None.
+
+(** (c) Define a normalization function -- i.e., a function
+        [normalize] going directly from [bin] to [bin] (i.e., _not_ by
+        converting to [nat] and back) such that, for any binary number
+        [b], converting [b] to a natural and then back to binary yields
+        [(normalize b)].  Prove it.  (Warning: This part is a bit
+        tricky -- you may end up defining several auxiliary lemmas.
+        One good way to find out what you need is to start by trying
+        to prove the main statement, see where you get stuck, and see
+        if you can find a lemma -- perhaps requiring its own inductive
+        proof -- that will allow the main proof to make progress.) Don't
+        define thi using nat_to_bin and bin_to_nat! *)
+
+(* FILL IN HERE *)
+
+(* Do not modify the following line: *)
+Definition manual_grade_for_binary_inverse_c : option (nat*string) := None.
 (** [] *)
 
+
+(* Wed Jan 9 12:02:44 EST 2019 *)
 
