@@ -577,7 +577,7 @@ Proof.
     [n], we also need a case analysis on [m] to keep the two "in sync." *)
 
     destruct m as [| m'] eqn:E.
-    + (* m = O *) simpl.
+    + (* m = O *) simpl in eq.
 
 (** The 0 case is trivial: *)
 
@@ -608,7 +608,17 @@ Proof.
 Theorem eqb_true : forall n m,
     n =? m = true -> n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n'].
+  - destruct m as [| m'].
+    + simpl. reflexivity.
+    + simpl. intros H. discriminate H.
+  - destruct m as [| m'].
+    + simpl. intros H. discriminate H.
+    + simpl. intros H.
+      apply IHn' in H. 
+      apply f_equal.
+      apply H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (eqb_true_informal)  
@@ -738,7 +748,15 @@ Theorem nth_error_after_last: forall (n : nat) (X : Type) (l : list X),
      length l = n ->
      nth_error l n = None.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n X l. generalize dependent n. induction l as [| x' l'].
+  - simpl. reflexivity.
+  - simpl. intros n H. destruct n.
+    + simpl. discriminate H.
+    + simpl.
+      injection H. intros H0.
+      apply IHl' in H0.
+      apply H0.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -919,11 +937,33 @@ Fixpoint split {X Y : Type} (l : list (X*Y))
 (** Prove that [split] and [combine] are inverses in the following
     sense: *)
 
+Lemma remove_cons : forall X (l1 l2 : list X) (x : X),
+    l1 = l2 -> x :: l1 = x :: l2.
+Proof.
+  intros X l1 l2 x H.
+  rewrite <- H.
+  reflexivity.
+Qed.
+
+Lemma split_cons : forall X Y (l : list (X * Y)),
+    split l = (fst (split l), snd (split l)).
+Proof.
+Abort.
+
 Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X Y l.
+  induction l as [| [a b] l'].
+  + intros l1 l2. simpl.
+    intros H.
+    inversion H.
+    reflexivity.
+  + intros l1 l2. 
+    unfold split.
+Abort.
+
 (** [] *)
 
 (** The [eqn:] part of the [destruct] tactic is optional: We've chosen
@@ -999,7 +1039,30 @@ Theorem bool_fn_applied_thrice :
   forall (f : bool -> bool) (b : bool),
   f (f (f b)) = f b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros f b.
+  destruct b eqn:e1.
+  + destruct (f b) eqn:e2.
+    - apply f_equal.
+      rewrite -> e1 in e2.
+      rewrite e2.
+      apply e2.
+    - rewrite -> e1 in e2.
+      rewrite e2.
+      destruct (f false) eqn:e3.
+      * apply e2.
+      * apply e3.
+  + destruct (f b) eqn:e4.
+    - rewrite e1 in e4.
+      rewrite e4.
+      destruct (f true) eqn:e5.
+      * apply e5.
+      * apply e4.
+    - rewrite e1 in e4.
+      rewrite e4.
+      destruct (f false) eqn:e6.
+      * discriminate e4.
+      * apply e6.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -1075,7 +1138,7 @@ Proof.
 Theorem eqb_sym : forall (n m : nat),
   (n =? m) = (m =? n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+Admitted.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, optional (eqb_sym_informal)  
