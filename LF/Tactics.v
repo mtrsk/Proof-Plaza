@@ -1138,7 +1138,14 @@ Qed.
 Theorem eqb_sym : forall (n m : nat),
   (n =? m) = (m =? n).
 Proof.
-Admitted.
+  intros n. induction n.
+  - intros m. destruct m.
+    + reflexivity.
+    + reflexivity.
+  - intros m. destruct m.
+    + reflexivity.
+    + simpl. apply IHn.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, optional (eqb_sym_informal)  
@@ -1159,7 +1166,14 @@ Theorem eqb_trans : forall n m p,
   m =? p = true ->
   n =? p = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p H1 H2.
+  apply eqb_true in H1.
+  apply eqb_true in H2.
+  rewrite -> H2 in H1.
+  rewrite H1.
+  rewrite <- eqb_refl.
+  reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (split_combine)  
@@ -1176,14 +1190,21 @@ Proof.
     things than necessary.  Hint: what property do you need of [l1]
     and [l2] for [split (combine l1 l2) = (l1,l2)] to be true?) *)
 
-Definition split_combine_statement : Prop
+Definition split_combine_statement : Prop :=
   (* ("[: Prop]" means that we are giving a name to a
      logical proposition here.) *)
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  forall (X Y : Type) (l1 : list X) (l2 : list Y),
+    length l1 = length l2 ->
+    split (combine l1 l2) = (l1, l2).
 
 Theorem split_combine : split_combine_statement.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros X Y l1. induction l1 as [| x' l' IHl'].
+  - intros l2 H. simpl. inversion H.
+    destruct l2.
+    + reflexivity.
+    + discriminate H1.
+Abort.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_split_combine : option (nat*string) := None.
@@ -1199,7 +1220,8 @@ Theorem filter_exercise : forall (X : Type) (test : X -> bool)
      filter test l = x :: lf ->
      test x = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X test x l lf.
+Abort.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced, recommended (forall_exists_challenge)  
