@@ -779,7 +779,11 @@ Proof.
 Theorem dist_not_exists : forall (X:Type) (P : X -> Prop),
   (forall x, P x) -> ~ (exists x, ~ P x).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X P Hx.
+  unfold not. intros [x Ex].
+  apply Ex in Hx.
+  destruct Hx.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (dist_exists_or)  
@@ -787,10 +791,31 @@ Proof.
     Prove that existential quantification distributes over
     disjunction. *)
 
+Lemma dist_exists_or_l : forall (X : Type) (P Q : X -> Prop),
+  (exists x, P x \/ Q x) -> (exists x, P x) \/ (exists x, Q x).
+Proof.
+    intros X P Q [x [HPx | HQx]].
+    - left. exists x. apply HPx. 
+    - right. exists x. apply HQx.
+Qed.
+
+Lemma dist_exists_or_r : forall (X: Type) (P Q : X -> Prop),
+  (exists x, P x) \/ (exists x, Q x) -> (exists x, P x \/ Q x).
+Proof.
+  intros X P Q [HPx | HQx].
+  - destruct HPx.
+    exists x. left. apply H.
+  - destruct HQx.
+    exists x. right. apply H.
+Qed.
+
 Theorem dist_exists_or : forall (X:Type) (P Q : X -> Prop),
   (exists x, P x \/ Q x) <-> (exists x, P x) \/ (exists x, Q x).
 Proof.
-   (* FILL IN HERE *) Admitted.
+  intros X P Q. split.
+  - apply dist_exists_or_l.
+  - apply dist_exists_or_r.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -869,19 +894,73 @@ Qed.
     of strengths and limitations. *)
 
 (** **** Exercise: 2 stars, standard (In_map_iff)  *)
+
+Lemma In_map_if_l :
+  forall (A B : Type) (f : A -> B) (l : list A) (y : B),
+    In y (map f l) -> exists x, f x = y /\ In x l.
+Proof.
+  intros A B f l y H. induction l as [| x' l' IHl'].
+  - (* l = [] *)
+    simpl in H.
+    contradiction.
+  - (* l = x :: l' *)
+    simpl in H. destruct H as [H1 | H2].
+    + (* H1 : f x' = y *)
+      exists x'. split.
+      { (* f x' = y *)
+        apply H1.
+      }
+      { (* In x' (x' :: l) *)
+        simpl. left. reflexivity.
+      }
+    + (* H2 : In y (map f l') *)
+      apply IHl' in H2. destruct H2 as [z H'].
+      { (* H' : f z = y /\ In z l' *)
+        inversion H'.
+        exists z. split.
+        - apply H.
+        - simpl. right. apply H0.
+      }
+Qed.
+
+Lemma In_map_if_r :
+  forall (A B : Type) (f : A -> B) (l : list A) (y : B),
+    (exists x, f x = y /\ In x l) -> In y (map f l).
+Proof.
+  intros A B f l y H. induction l as [| x' l' IHl'].
+  - inversion H. destruct H0.
+    + simpl in H1. contradiction.
+  - simpl. simpl in H. inversion H.
+    inversion H0.
+    inversion H2.
+    + left. rewrite <- H3 in H1. apply H1.
+    + destruct H2.
+      {
+        left. rewrite <- H2 in H1. apply H1.
+      }
+      {
+        right. apply IHl'. exists x. split.
+        - apply H1.
+        - apply H2.
+      }
+Qed.
+
 Lemma In_map_iff :
   forall (A B : Type) (f : A -> B) (l : list A) (y : B),
     In y (map f l) <->
     exists x, f x = y /\ In x l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros A B f l y. split.
+  - apply In_map_if_l.
+  - apply In_map_if_r.
+Qed. 
 (** [] *)
 
 (** **** Exercise: 2 stars, standard (In_app_iff)  *)
 Lemma In_app_iff : forall A l l' (a:A),
   In a (l++l') <-> In a l \/ In a l'.
 Proof.
-  (* FILL IN HERE *) Admitted.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard, recommended (All)  
