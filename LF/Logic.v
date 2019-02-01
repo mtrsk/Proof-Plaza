@@ -1477,6 +1477,20 @@ Proof.
   - exists 0. reflexivity.
   - destruct (evenb n') eqn:H.
     + rewrite evenb_S. rewrite H. simpl.
+      destruct IHn' as [k' IHn'].
+      exists k'. rewrite IHn'. reflexivity.
+    + rewrite evenb_S. rewrite H. simpl.
+      destruct IHn' as [k' IHn'].
+      exists (k'+1). rewrite IHn'.
+      rewrite double_plus, double_plus.
+      rewrite plus_n_Sm.
+      rewrite <- plus_1_l.
+      rewrite <- plus_n_Sm.
+      rewrite <- (plus_1_l(k' + k')).
+      rewrite plus_comm. rewrite plus_assoc.
+      rewrite <- plus_assoc.
+      rewrite (plus_comm 1).
+      reflexivity.
 Qed.
 (** [] *)
 
@@ -1635,12 +1649,30 @@ Qed.
 Lemma andb_true_iff : forall b1 b2:bool,
   b1 && b2 = true <-> b1 = true /\ b2 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b1 b2. split.
+  - intros H. split.
+    + rewrite andb_commutative in H.
+      apply andb_true_elim2 in H.
+      apply H.
+    + apply andb_true_elim2 in H.
+      apply H.
+  - intros H. destruct H as [HA HB].
+    rewrite HA, HB. reflexivity.
+Qed.
 
 Lemma orb_true_iff : forall b1 b2,
   b1 || b2 = true <-> b1 = true \/ b2 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b1 b2. split.
+  - intros H. destruct H. destruct b1.
+    + simpl. left. reflexivity.
+    + simpl. right. reflexivity.
+  - intros H. destruct H as [HA |  HB].
+    + rewrite HA. simpl. reflexivity.
+    + rewrite HB. simpl. destruct b1.
+      * reflexivity.
+      * reflexivity.
+Qed. 
 (** [] *)
 
 (** **** Exercise: 1 star, standard (eqb_neq)  
@@ -1652,7 +1684,13 @@ Proof.
 Theorem eqb_neq : forall x y : nat,
   x =? y = false <-> x <> y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros x y. split.
+  - intros H. unfold not.
+    intros H1. rewrite H1 in H. 
+    rewrite <- eqb_refl in H.
+    discriminate.
+  - unfold not. intros H.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (eqb_list)  
