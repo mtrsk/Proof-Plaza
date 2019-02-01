@@ -1689,7 +1689,31 @@ Proof.
     intros H1. rewrite H1 in H. 
     rewrite <- eqb_refl in H.
     discriminate.
-  - unfold not. intros H.
+  - unfold not. intros H. induction x as [| x'].
+    + induction y as [| y'].
+      {
+        exfalso.
+        apply H.
+        reflexivity.
+      }
+      {
+        simpl.
+        reflexivity.
+      }
+   + induction y as [| y'].
+     {
+       simpl.
+       reflexivity.
+     }
+     {
+       simpl. destruct (x' =? y') eqn:Heq.
+       - exfalso. 
+         apply H.
+         apply f_equal.
+         apply eqb_eq.
+         apply Heq.
+       - reflexivity.
+     }
 Qed.
 (** [] *)
 
@@ -1702,15 +1726,58 @@ Qed.
     definition is correct, prove the lemma [eqb_list_true_iff]. *)
 
 Fixpoint eqb_list {A : Type} (eqb : A -> A -> bool)
-                  (l1 l2 : list A) : bool
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+                  (l1 l2 : list A) : bool :=
+  match l1, l2 with
+    | [], [] => true
+    | _, [] => false
+    | [], _ => false
+    | h1::t1, h2::t2 => match (eqb h1 h2) with
+                       | true => eqb_list eqb t1 t2
+                       | false => false
+                     end
+  end.
 
 Lemma eqb_list_true_iff :
   forall A (eqb : A -> A -> bool),
     (forall a1 a2, eqb a1 a2 = true <-> a1 = a2) ->
     forall l1 l2, eqb_list eqb l1 l2 = true <-> l1 = l2.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros A eqb a l1 l2. split.
+  - (* -> *)
+    generalize dependent l2.
+    induction l1 as [| x' l' IHl'].
+    + (* l1 = [] *)
+      simpl. destruct l2.
+      {
+        intros H. reflexivity.
+      }
+      {
+        intros H. discriminate.
+      }
+    + (* l1 = x' :: l' *) 
+      induction l2 as [| y' m' IHm'].
+      { (* l2 = [] *)
+        simpl. intros H. discriminate.
+      }
+      { (* l2 = y' :: m' *)
+        simpl. intros H1. destruct (eqb x' y') eqn:H0.
+        - apply a in H0.
+          rewrite <- H0.
+          assert (H2 : l' = m' -> x' :: l' = x' :: m').
+          {
+            intros H3.
+            rewrite H3.
+            reflexivity.
+          }
+          apply H2.
+          apply IHl'.
+          apply H1.
+        - (* eqb x' y' = false *)
+          discriminate.
+      }
+  - (* <- *)
+    generalize dependent l2.
+Abort.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, recommended (All_forallb)  
