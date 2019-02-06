@@ -3,7 +3,9 @@ all:
 	$(MAKE) clean
 
 check_LF:
-	coqc -Q LF/ LF LF/*.v
+	./scripts/lf.sh
+
+.ONESHELL:
 
 clean:
 	rm LF/*.vo
