@@ -13,5 +13,7 @@ stdenv.mkDerivation {
     (coq.override {
       buildIde = false;
     })
-  ];
+  ] ++ (with coqPackages; [
+    QuickChick
+  ]);
 }
