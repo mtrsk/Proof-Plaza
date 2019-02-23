@@ -148,7 +148,10 @@ Qed.
 Theorem ev_double : forall n,
   even (double n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n' IHn'].
+  + simpl. apply ev_0.
+  + simpl. apply ev_SS. apply IHn'.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -292,7 +295,27 @@ Theorem one_not_even' : ~ even 1.
 Theorem SSSSev__even : forall n,
   even (S (S (S (S n)))) -> even n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n H. inversion H.
+  apply evSS_ev in H1.
+  apply H1.
+Qed.
+
+(** <inversion>-Free version of the above proof **)
+Theorem SSSSev__even' : forall n,
+  even (S (S (S (S n)))) -> even n.
+Proof.
+  intros n H. apply ev_inversion in H.
+  destruct H as [| [m [H1 H2]]].
+  + discriminate H.
+  + injection H1. intros H3.
+    rewrite <- H3 in H2.
+    apply ev_inversion in H2.
+    destruct H2 as [| [m' [H4 H5]]].
+    - discriminate H.
+    - injection H4. intros H6.
+      rewrite -> H6.
+      apply H5.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (even5_nonsense)  
@@ -302,7 +325,9 @@ Proof.
 Theorem even5_nonsense :
   even 5 -> 2 + 2 = 9.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros E.
+  inversion E. inversion H0. inversion H2.
+Qed.
 (** [] *)
 
 (** The [inversion] tactic does quite a bit of work. When
@@ -452,7 +477,10 @@ Qed.
 (** **** Exercise: 2 stars, standard (ev_sum)  *)
 Theorem ev_sum : forall n m, even n -> even m -> even (n + m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m E1 E2. induction E1 as [| n' E1' HE1'].
+  + simpl. apply E2.
+  + simpl. apply ev_SS. apply HE1'.
+Qed.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced, optional (even'_ev)  
