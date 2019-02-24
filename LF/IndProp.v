@@ -498,9 +498,32 @@ Inductive even' : nat -> Prop :=
     one.  (You may want to look at the previous theorem when you get
     to the induction step.) *)
 
+Lemma even'_2plus : forall n : nat,
+    (S (S n)) = 2 + n.
+Proof.
+  intros n. destruct n.
+  - reflexivity.
+  - reflexivity.
+Qed.
+
 Theorem even'_ev : forall n, even' n <-> even n.
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros n. split.
+  + (* -> *)
+    intros E'. induction E'.
+    - apply ev_0.
+    - apply ev_SS. apply ev_0.
+    - apply ev_sum.
+      { apply IHE'1. }
+      { apply IHE'2. }
+  + (* <- *)
+    intros E. induction E as [| m Em IHEm].
+    - apply even'_0.
+    - rewrite even'_2plus.
+      apply even'_sum.
+      { apply even'_2. }
+      { apply IHEm. }
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, recommended (ev_ev__ev)  
@@ -511,7 +534,12 @@ Proof.
 Theorem ev_ev__ev : forall n m,
   even (n+m) -> even n -> even m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m Enm En. induction En as [| n' En' Hen'].
+  + simpl in Enm. apply Enm.
+  + simpl in Enm. apply evSS_ev in Enm.
+    apply Hen' in Enm.
+    apply Enm.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard, optional (ev_plus_plus)  
@@ -523,7 +551,9 @@ Proof.
 Theorem ev_plus_plus : forall n m p,
   even (n+m) -> even (n+p) -> even (m+p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p Enm.
+  apply ev_ev__ev.
+Abort.
 (** [] *)
 
 (* ################################################################# *)
@@ -612,18 +642,16 @@ Inductive next_even : nat -> nat -> Prop :=
     Define an inductive binary relation [total_relation] that holds
     between every pair of natural numbers. *)
 
-(* FILL IN HERE 
-
-    [] *)
+Inductive total_relation : nat -> nat -> Prop :=
+  | total_nm : forall n m, total_relation n m.
 
 (** **** Exercise: 2 stars, standard, optional (empty_relation)  
 
     Define an inductive binary relation [empty_relation] (on numbers)
     that never holds. *)
 
-(* FILL IN HERE 
-
-    [] *)
+Inductive empty_relation : nat -> nat -> Prop :=
+  | empty_nm : forall n m, False = True -> empty_relation n m.
 
 (** From the definition of [le], we can sketch the behaviors of
     [destruct], [inversion], and [induction] on a hypothesis [H]
@@ -645,67 +673,151 @@ Inductive next_even : nat -> nat -> Prop :=
 
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros m n o Emn Eno. induction Eno as [| n' o' HEno].
+  + apply Emn.
+  + apply le_S. apply HEno.
+Qed.
 
 Theorem O_le_n : forall n,
   0 <= n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n' IHn'].
+  + apply le_n.
+  + apply le_S. apply IHn'.
+Qed.
 
 Theorem n_le_m__Sn_le_Sm : forall n m,
   n <= m -> S n <= S m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m Enm. induction Enm.
+  + apply le_n.
+  + apply le_S. apply IHEnm.
+Qed.
 
 Theorem Sn_le_Sm__n_le_m : forall n m,
   S n <= S m -> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m Enm.
+  apply le_S_n.
+  apply Enm.
+Qed.
 
 Theorem le_plus_l : forall a b,
   a <= a + b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros a b. induction b as [| b' IHb'].
+  + rewrite <- plus_n_O.
+    apply le_n.
+  + rewrite <- plus_n_Sm.
+    apply le_S in IHb'.
+    apply IHb'.
+Qed.
 
 Theorem plus_lt : forall n1 n2 m,
   n1 + n2 < m ->
   n1 < m /\ n2 < m.
 Proof.
- unfold lt.
- (* FILL IN HERE *) Admitted.
+  unfold lt.
+  intros n1 n2 m H. split.
+  + apply (le_trans (S n1) (S (n1 + n2))).
+    - apply n_le_m__Sn_le_Sm.
+      apply le_plus_l.
+    - apply H.
+  + apply (le_trans (S n2) (S (n1 + n2))).
+    - apply n_le_m__Sn_le_Sm.
+      rewrite plus_comm.
+      apply le_plus_l.
+    - apply H.
+Qed.
 
 Theorem lt_S : forall n m,
   n < m ->
   n < S m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold lt.
+  intros n m H.
+  apply le_S in H.
+  apply H.
+Qed.
 
 Theorem leb_complete : forall n m,
   n <=? m = true -> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H.
+  generalize dependent n.
+  induction m.
+  + induction n.
+    - reflexivity.
+    - simpl.
+      intros H.
+      discriminate H.
+  + induction n.
+    - simpl. intros H.
+      apply le_S.
+      apply IHm.
+      apply H.
+    - intros H.
+      inversion H.
+      apply n_le_m__Sn_le_Sm.
+      apply IHm.
+      apply H1.
+Qed.
 
 (** Hint: The next one may be easiest to prove by induction on [m]. *)
+
+Lemma leb_correct_aux : forall n m,
+  (n <=? m) = true <-> (S n <=? S m) = true.
+Proof.
+  intros n m. split.
+  - intros H. inversion H. reflexivity.
+  - intros H. inversion H. reflexivity.
+Qed.
 
 Theorem leb_correct : forall n m,
   n <= m ->
   n <=? m = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H. generalize dependent n. induction m.
+  + intros n H1.
+    inversion H1.
+    reflexivity.
+  + intros n H1. inversion H1.
+    - rewrite <- leb_refl. reflexivity.
+    - induction n.
+      {
+        reflexivity.
+      }
+      {
+        simpl.
+        apply le_S_n in H1.
+        apply IHm in H1.
+        apply H1.
+      }
+Qed.
 
 (** Hint: This one can easily be proved without using [induction]. *)
 
 Theorem leb_true_trans : forall n m o,
   n <=? m = true -> m <=? o = true -> n <=? o = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m o Hnm Hmo.
+  apply leb_complete in Hnm.
+  apply leb_complete in Hmo.
+  apply leb_correct.
+  apply (le_trans n m).
+  + apply Hnm.
+  + apply Hmo.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (leb_iff)  *)
 Theorem leb_iff : forall n m,
   n <=? m = true <-> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m. split.
+  + apply leb_complete.
+  + apply leb_correct.
+Qed.
 (** [] *)
 
 Module R.
