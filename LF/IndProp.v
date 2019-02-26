@@ -795,6 +795,7 @@ Proof.
       }
 Qed.
 
+
 (** Hint: This one can easily be proved without using [induction]. *)
 
 Theorem leb_true_trans : forall n m o,
@@ -850,6 +851,16 @@ Inductive R : nat -> nat -> nat -> Prop :=
 (* FILL IN HERE *)
 *)
 
+(**
+Compute c2 0 0 0.
+Compute c3 0 0 0.
+Compute c4 1 2 3.
+
+Compute c2 1 1 2. (* 2 1 -> 3 *)
+Compute c4 1 1 2. (* 2 2 -> 4 *)
+Compute c5 1 2 3. (* 2 1 -> 3 *)
+**)
+
 (* Do not modify the following line: *)
 Definition manual_grade_for_R_provability : option (nat*string) := None.
 (** [] *)
@@ -860,12 +871,54 @@ Definition manual_grade_for_R_provability : option (nat*string) := None.
     Figure out which function; then state and prove this equivalence
     in Coq? *)
 
-Definition fR : nat -> nat -> nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition fR : nat -> nat -> nat :=
+  fun x y => x + y.
 
 Theorem R_equiv_fR : forall m n o, R m n o <-> fR m n = o.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros m n o. split.
+  - (* -> *)
+    intros H. induction H.
+    + (* c1 *)
+      reflexivity.
+    + (* c2 *)
+      simpl. rewrite IHR. reflexivity.
+    + (* c3 *)
+      rewrite <- IHR.
+      unfold fR.
+      rewrite <- plus_n_Sm.
+      reflexivity.
+    + (* c4 *)
+      unfold fR in IHR.
+      simpl in IHR.
+      rewrite <- plus_n_Sm in IHR.
+      inversion IHR.
+      unfold fR.
+      reflexivity.
+    + (* c5 *)
+      unfold fR in IHR.
+      unfold fR.
+      rewrite plus_comm in IHR.
+      apply IHR.
+  - (* <- *)
+    intros H. destruct H.
+    unfold fR.
+    generalize dependent n. induction m.
+    + intros n.
+      rewrite plus_O_n.
+      induction n.
+      {
+        apply c1.
+      }
+      {
+        apply c3.
+        apply IHn.
+      }
+    + intros n.
+      rewrite plus_Sn_m.
+      apply c2.
+      apply IHm.
+Qed.
 (** [] *)
 
 End R.
@@ -908,8 +961,23 @@ End R.
       Hint: choose your induction carefully! *)
 
 Inductive subseq : list nat -> list nat -> Prop :=
-(* FILL IN HERE *)
-.
+  | empty l : subseq [] l
+  | rmsnd x l1 l2 : subseq l1 l2 -> subseq l1 (x :: l2)
+  | rmboth x l1 l2 : subseq l1 l2 -> subseq (x :: l1) (x :: l2).
+
+Example subseq_ex1:
+  subseq [1;2;3] [1;2;3].
+Proof.
+  apply rmboth. apply rmboth. apply rmboth. apply empty.
+Qed.
+
+Example subseq_ex2:
+  subseq [1;2;3] [1;1;1;2;2;3].
+Proof.
+  apply rmboth. apply rmsnd. apply rmsnd.
+  apply rmboth. apply rmsnd. apply rmboth.
+  apply empty.
+Qed.
 
 Theorem subseq_refl : forall (l : list nat), subseq l l.
 Proof.
@@ -932,6 +1000,7 @@ Proof.
 (** **** Exercise: 2 stars, standard, optional (R_provability2)  
 
     Suppose we give Coq the following definition:
+  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
 
     Inductive R : nat -> list nat -> Prop :=
       | c1 : R 0 []
