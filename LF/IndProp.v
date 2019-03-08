@@ -1228,13 +1228,19 @@ Qed.
 Lemma empty_is_empty : forall T (s : list T),
   ~ (s =~ EmptySet).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T s. unfold not.
+  intros H. inversion H.
+Qed.
 
 Lemma MUnion' : forall T (s : list T) (re1 re2 : @reg_exp T),
   s =~ re1 \/ s =~ re2 ->
   s =~ Union re1 re2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T s re1 re2 H.
+  inversion H.
+  + apply MUnionL. apply H0.
+  + apply MUnionR. apply H0.
+Qed.
 
 (** The next lemma is stated in terms of the [fold] function from the
     [Poly] chapter: If [ss : list (list T)] represents a sequence of
@@ -1245,7 +1251,19 @@ Lemma MStar' : forall T (ss : list (list T)) (re : reg_exp),
   (forall s, In s ss -> s =~ re) ->
   fold app ss [] =~ Star re.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T ss re H.
+  induction ss.
+  + simpl. apply MStar0.
+  + simpl. apply MStarApp.
+    - apply H.
+      simpl. left. reflexivity.
+    - apply IHss.
+      intros s H1.
+      apply H. simpl.
+      right.
+      apply H1.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 4 stars, standard, optional (reg_exp_of_list_spec)  
@@ -1256,7 +1274,34 @@ Proof.
 Lemma reg_exp_of_list_spec : forall T (s1 s2 : list T),
   s1 =~ reg_exp_of_list s2 <-> s1 = s2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T s1 s2. split.
+  + (* -> *)
+    generalize dependent s1.
+    induction s2.
+    - simpl. intros s1 H.
+      inversion H.
+      reflexivity.
+    - simpl. intros s1 H.
+      inversion H.
+      apply IHs2 in H4.
+      inversion H3.
+      rewrite <- H4.
+      simpl. reflexivity.
+  + (* <- *)
+    generalize dependent s1.
+    induction s2.
+    - intros s1 H. rewrite H.
+      simpl. apply MEmpty.
+    - intros s1 H. rewrite H.
+      apply (MApp [x] _ s2).
+      {
+        apply MChar.        
+      }
+      {
+        apply IHs2.
+        reflexivity.
+      }
+Qed.
 (** [] *)
 
 (** Since the definition of [exp_match] has a recursive
@@ -1307,7 +1352,7 @@ Proof.
       right. apply (IH2 Hin).
   - (* MUnionL *)
     simpl. rewrite In_app_iff.
-    left. apply (IH Hin).
+    left. Check (IH Hin). apply (IH Hin).
   - (* MUnionR *)
     simpl. rewrite In_app_iff.
     right. apply (IH Hin).
@@ -1339,13 +1384,83 @@ Qed.
     regular expression matches some string. Prove that your function
     is correct. *)
 
-Fixpoint re_not_empty {T : Type} (re : @reg_exp T) : bool
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Fixpoint re_not_empty {T : Type} (re : @reg_exp T) : bool :=
+  match re with
+    | EmptySet => false
+    | EmptyStr => true
+    | Char _ => true
+    | App re1 re2 => (re_not_empty re1) && (re_not_empty re2)
+    | Union re1 re2 => (re_not_empty re1) || (re_not_empty re2)
+    | Star _ => true
+  end.
+
+Lemma re_not_empty_l : forall T (re : @reg_exp T),
+  (exists s, s =~ re) -> re_not_empty re = true.
+Proof.
+  intros T re H. induction re.
+  + (* EmptySet *)
+    inversion H.
+    apply empty_is_empty in H0.
+    contradiction.
+  + (* EmptyStr *)
+    reflexivity.
+  + (* Char t *)
+    reflexivity.
+  + (* App re1 re2 *)
+    simpl. apply andb_true_iff.
+    inversion H. inversion H0.
+    split.
+    {
+      apply IHre1. exists s1. apply H4.
+    }
+    {
+      apply IHre2. exists s2. apply H5.
+    }
+  + (* Union re1 re2 *)
+    simpl. apply orb_true_iff.
+    inversion H. inversion H0.
+    {
+      left. apply IHre1.
+      exists x. apply H3.
+    }
+    {
+      right. apply IHre2.
+      exists x. apply H3.
+    }
+  + (* Star re *)
+    reflexivity.
+Qed.
+
+Lemma re_not_empty_r : forall T (re : @reg_exp T),
+  re_not_empty re = true -> (exists s, s =~ re).
+Proof.
+  intros T re H. induction re.
+  + simpl in H. discriminate.
+  + exists []. apply MEmpty.
+  + exists [t]. apply MChar.
+  + inversion H. apply andb_true_iff in H1.
+    inversion H1.
+    apply IHre1 in H0. inversion H0 as [ s1 HS1 ].
+    apply IHre2 in H2. inversion H2 as [ s2 HS2 ].
+    exists (s1 ++ s2). apply MApp.
+    - apply HS1.
+    - apply HS2.
+  + inversion H. apply orb_true_iff in H1.
+    inversion H1.
+    - apply IHre1 in H0. inversion H0 as [ s1 HS1 ].
+      exists s1. apply MUnionL. apply HS1.
+    - apply IHre2 in H0. inversion H0 as [ s2 HS2 ].
+      exists s2. apply MUnionR. apply HS2.
+  + exists []. apply MStar0.
+Qed.
 
 Lemma re_not_empty_correct : forall T (re : @reg_exp T),
   (exists s, s =~ re) <-> re_not_empty re = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T re. split.
+  + apply re_not_empty_l.
+  + apply re_not_empty_r.
+Qed.
 (** [] *)
 
 (* ================================================================= *)
