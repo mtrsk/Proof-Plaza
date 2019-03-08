@@ -149,8 +149,8 @@ Theorem ev_double : forall n,
   even (double n).
 Proof.
   intros n. induction n as [| n' IHn'].
-  + simpl. apply ev_0.
-  + simpl. apply ev_SS. apply IHn'.
+  - simpl. apply ev_0.
+  - simpl. apply ev_SS. apply IHn'.
 Qed.
 (** [] *)
 
@@ -306,13 +306,13 @@ Theorem SSSSev__even' : forall n,
 Proof.
   intros n H. apply ev_inversion in H.
   destruct H as [| [m [H1 H2]]].
-  + discriminate H.
-  + injection H1. intros H3.
+  - discriminate H.
+  - injection H1. intros H3.
     rewrite <- H3 in H2.
     apply ev_inversion in H2.
     destruct H2 as [| [m' [H4 H5]]].
-    - discriminate H.
-    - injection H4. intros H6.
+    + discriminate H.
+    + injection H4. intros H6.
       rewrite -> H6.
       apply H5.
 Qed.
@@ -478,8 +478,8 @@ Qed.
 Theorem ev_sum : forall n m, even n -> even m -> even (n + m).
 Proof.
   intros n m E1 E2. induction E1 as [| n' E1' HE1'].
-  + simpl. apply E2.
-  + simpl. apply ev_SS. apply HE1'.
+  - simpl. apply E2.
+  - simpl. apply ev_SS. apply HE1'.
 Qed.
 (** [] *)
 
@@ -509,17 +509,17 @@ Qed.
 Theorem even'_ev : forall n, even' n <-> even n.
 Proof.
   intros n. split.
-  + (* -> *)
+  - (* -> *)
     intros E'. induction E'.
-    - apply ev_0.
-    - apply ev_SS. apply ev_0.
-    - apply ev_sum.
+    + apply ev_0.
+    + apply ev_SS. apply ev_0.
+    + apply ev_sum.
       { apply IHE'1. }
       { apply IHE'2. }
-  + (* <- *)
+  - (* <- *)
     intros E. induction E as [| m Em IHEm].
-    - apply even'_0.
-    - rewrite even'_2plus.
+    + apply even'_0.
+    + rewrite even'_2plus.
       apply even'_sum.
       { apply even'_2. }
       { apply IHEm. }
@@ -535,8 +535,8 @@ Theorem ev_ev__ev : forall n m,
   even (n+m) -> even n -> even m.
 Proof.
   intros n m Enm En. induction En as [| n' En' Hen'].
-  + simpl in Enm. apply Enm.
-  + simpl in Enm. apply evSS_ev in Enm.
+  - simpl in Enm. apply Enm.
+  - simpl in Enm. apply evSS_ev in Enm.
     apply Hen' in Enm.
     apply Enm.
 Qed.
@@ -674,24 +674,24 @@ Inductive empty_relation : nat -> nat -> Prop :=
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof.
   intros m n o Emn Eno. induction Eno as [| n' o' HEno].
-  + apply Emn.
-  + apply le_S. apply HEno.
+  - apply Emn.
+  - apply le_S. apply HEno.
 Qed.
 
 Theorem O_le_n : forall n,
   0 <= n.
 Proof.
   intros n. induction n as [| n' IHn'].
-  + apply le_n.
-  + apply le_S. apply IHn'.
+  - apply le_n.
+  - apply le_S. apply IHn'.
 Qed.
 
 Theorem n_le_m__Sn_le_Sm : forall n m,
   n <= m -> S n <= S m.
 Proof.
   intros n m Enm. induction Enm.
-  + apply le_n.
-  + apply le_S. apply IHEnm.
+  - apply le_n.
+  - apply le_S. apply IHEnm.
 Qed.
 
 Theorem Sn_le_Sm__n_le_m : forall n m,
@@ -706,9 +706,9 @@ Theorem le_plus_l : forall a b,
   a <= a + b.
 Proof.
   intros a b. induction b as [| b' IHb'].
-  + rewrite <- plus_n_O.
+  - rewrite <- plus_n_O.
     apply le_n.
-  + rewrite <- plus_n_Sm.
+  - rewrite <- plus_n_Sm.
     apply le_S in IHb'.
     apply IHb'.
 Qed.
@@ -719,15 +719,15 @@ Theorem plus_lt : forall n1 n2 m,
 Proof.
   unfold lt.
   intros n1 n2 m H. split.
-  + apply (le_trans (S n1) (S (n1 + n2))).
-    - apply n_le_m__Sn_le_Sm.
+  - apply (le_trans (S n1) (S (n1 + n2))).
+    + apply n_le_m__Sn_le_Sm.
       apply le_plus_l.
-    - apply H.
-  + apply (le_trans (S n2) (S (n1 + n2))).
-    - apply n_le_m__Sn_le_Sm.
+    + apply H.
+  - apply (le_trans (S n2) (S (n1 + n2))).
+    + apply n_le_m__Sn_le_Sm.
       rewrite plus_comm.
       apply le_plus_l.
-    - apply H.
+    + apply H.
 Qed.
 
 Theorem lt_S : forall n m,
@@ -746,17 +746,17 @@ Proof.
   intros n m H.
   generalize dependent n.
   induction m.
-  + induction n.
-    - reflexivity.
-    - simpl.
+  - induction n.
+    + reflexivity.
+    + simpl.
       intros H.
       discriminate H.
-  + induction n.
-    - simpl. intros H.
+  - induction n.
+    + simpl. intros H.
       apply le_S.
       apply IHm.
       apply H.
-    - intros H.
+    + intros H.
       inversion H.
       apply n_le_m__Sn_le_Sm.
       apply IHm.
@@ -1238,8 +1238,8 @@ Lemma MUnion' : forall T (s : list T) (re1 re2 : @reg_exp T),
 Proof.
   intros T s re1 re2 H.
   inversion H.
-  + apply MUnionL. apply H0.
-  + apply MUnionR. apply H0.
+  - apply MUnionL. apply H0.
+  - apply MUnionR. apply H0.
 Qed.
 
 (** The next lemma is stated in terms of the [fold] function from the
@@ -1253,11 +1253,11 @@ Lemma MStar' : forall T (ss : list (list T)) (re : reg_exp),
 Proof.
   intros T ss re H.
   induction ss.
-  + simpl. apply MStar0.
-  + simpl. apply MStarApp.
-    - apply H.
+  - simpl. apply MStar0.
+  - simpl. apply MStarApp.
+    + apply H.
       simpl. left. reflexivity.
-    - apply IHss.
+    + apply IHss.
       intros s H1.
       apply H. simpl.
       right.
@@ -1275,24 +1275,24 @@ Lemma reg_exp_of_list_spec : forall T (s1 s2 : list T),
   s1 =~ reg_exp_of_list s2 <-> s1 = s2.
 Proof.
   intros T s1 s2. split.
-  + (* -> *)
+  - (* -> *)
     generalize dependent s1.
     induction s2.
-    - simpl. intros s1 H.
+    + simpl. intros s1 H.
       inversion H.
       reflexivity.
-    - simpl. intros s1 H.
+    + simpl. intros s1 H.
       inversion H.
       apply IHs2 in H4.
       inversion H3.
       rewrite <- H4.
       simpl. reflexivity.
-  + (* <- *)
+  - (* <- *)
     generalize dependent s1.
     induction s2.
-    - intros s1 H. rewrite H.
+    + intros s1 H. rewrite H.
       simpl. apply MEmpty.
-    - intros s1 H. rewrite H.
+    + intros s1 H. rewrite H.
       apply (MApp [x] _ s2).
       {
         apply MChar.        
@@ -1398,36 +1398,28 @@ Lemma re_not_empty_l : forall T (re : @reg_exp T),
   (exists s, s =~ re) -> re_not_empty re = true.
 Proof.
   intros T re H. induction re.
-  + (* EmptySet *)
+  - (* EmptySet *)
     inversion H.
     apply empty_is_empty in H0.
     contradiction.
-  + (* EmptyStr *)
+  - (* EmptyStr *)
     reflexivity.
-  + (* Char t *)
+  - (* Char t *)
     reflexivity.
-  + (* App re1 re2 *)
+  - (* App re1 re2 *)
     simpl. apply andb_true_iff.
     inversion H. inversion H0.
     split.
-    {
-      apply IHre1. exists s1. apply H4.
-    }
-    {
-      apply IHre2. exists s2. apply H5.
-    }
-  + (* Union re1 re2 *)
+    + apply IHre1. exists s1. apply H4.
+    + apply IHre2. exists s2. apply H5.
+  - (* Union re1 re2 *)
     simpl. apply orb_true_iff.
     inversion H. inversion H0.
-    {
-      left. apply IHre1.
+    + left. apply IHre1.
       exists x. apply H3.
-    }
-    {
-      right. apply IHre2.
+    + right. apply IHre2.
       exists x. apply H3.
-    }
-  + (* Star re *)
+  - (* Star re *)
     reflexivity.
 Qed.
 
@@ -1435,23 +1427,23 @@ Lemma re_not_empty_r : forall T (re : @reg_exp T),
   re_not_empty re = true -> (exists s, s =~ re).
 Proof.
   intros T re H. induction re.
-  + simpl in H. discriminate.
-  + exists []. apply MEmpty.
-  + exists [t]. apply MChar.
-  + inversion H. apply andb_true_iff in H1.
+  - simpl in H. discriminate.
+  - exists []. apply MEmpty.
+  - exists [t]. apply MChar.
+  - inversion H. apply andb_true_iff in H1.
     inversion H1.
     apply IHre1 in H0. inversion H0 as [ s1 HS1 ].
     apply IHre2 in H2. inversion H2 as [ s2 HS2 ].
     exists (s1 ++ s2). apply MApp.
-    - apply HS1.
-    - apply HS2.
-  + inversion H. apply orb_true_iff in H1.
+    + apply HS1.
+    + apply HS2.
+  - inversion H. apply orb_true_iff in H1.
     inversion H1.
-    - apply IHre1 in H0. inversion H0 as [ s1 HS1 ].
+    + apply IHre1 in H0. inversion H0 as [ s1 HS1 ].
       exists s1. apply MUnionL. apply HS1.
-    - apply IHre2 in H0. inversion H0 as [ s2 HS2 ].
+    + apply IHre2 in H0. inversion H0 as [ s2 HS2 ].
       exists s2. apply MUnionR. apply HS2.
-  + exists []. apply MStar0.
+  - exists []. apply MStar0.
 Qed.
 
 Lemma re_not_empty_correct : forall T (re : @reg_exp T),
@@ -1599,7 +1591,35 @@ Lemma MStar'' : forall T (s : list T) (re : reg_exp),
     s = fold app ss []
     /\ forall s', In s' ss -> s' =~ re.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T s re H. remember (Star re) as re'.
+  induction H.
+  - (* MEmpty *) discriminate.
+  - (* MChar *) discriminate.
+  - (* MApp *) discriminate.
+  - (* MUnionL *) discriminate.
+  - (* MUnionR *) discriminate.
+  - (* MStar0 *)
+    inversion Heqre'. exists []. split.
+    + reflexivity.
+    + intros s H1. simpl in H1. contradiction.
+  - (* MStar *)
+    inversion Heqre'.
+    rewrite H2 in *.
+    induction s1.
+    + (* [] *)
+      simpl. apply IHexp_match2. reflexivity.
+    + (* x :: l *)
+      simpl in *.
+      apply IHexp_match2 in Heqre' as Heqre''.
+      inversion Heqre''.
+      inversion H1.
+      exists ((x::s1)::x0). split.
+      { simpl. rewrite <- H3. reflexivity. }
+      { intros s' H5. inversion H5.
+        - rewrite <- H6. apply H.
+        - apply H4. apply H6.
+      }
+Qed. 
 (** [] *)
 
 (** **** Exercise: 5 stars, advanced (pumping)  
