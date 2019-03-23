@@ -1608,7 +1608,7 @@ Proof.
     induction s1.
     + (* [] *)
       simpl. apply IHexp_match2. reflexivity.
-    + (* x :: l *)
+    + (* x :: s1 *)
       simpl in *.
       apply IHexp_match2 in Heqre' as Heqre''.
       inversion Heqre''.
@@ -1703,6 +1703,10 @@ Proof.
        | re | s1 s2 re Hmatch1 IH1 Hmatch2 IH2 ].
   - (* MEmpty *)
     simpl. omega.
+  - (* MChar *)
+    simpl. omega.
+  - (* MApp *)
+    simpl. intros H3. destruct H3.
   (* FILL IN HERE *) Admitted.
 
 End Pumping.
@@ -1778,7 +1782,14 @@ Qed.
 (** **** Exercise: 2 stars, standard, recommended (reflect_iff)  *)
 Theorem reflect_iff : forall P b, reflect P b -> (P <-> b = true).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P b H. destruct b.
+  - split.
+    + intros H0. reflexivity.
+    + inversion H. intros _. apply H0.
+  - split.
+    + inversion H. intros H1. contradiction.
+    + intros H1. discriminate.
+Qed.
 (** [] *)
 
 (** The advantage of [reflect] over the normal "if and only if"
