@@ -1840,7 +1840,23 @@ Fixpoint count n l :=
 Theorem eqbP_practice : forall n l,
   count n l = 0 -> ~(In n l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n l H. induction l as [| m l' IHl'].
+  - (* l = [] *)
+    simpl. unfold not. intros H0. apply H0.
+  - (* l = m :: l' *)
+    simpl in H. destruct (eqbP n m) in H.
+    + simpl. (* H *) discriminate.
+    + simpl in H. apply IHl' in H as H1.
+      simpl. unfold not in H0. unfold not. intros H2.
+      inversion H2.
+      {
+        symmetry in H3. apply H0 in H3. apply H3.
+      }
+      {
+        (* H1 && H3 *)
+        contradiction.
+      }
+Qed.
 (** [] *)
 
 (** This small example shows how reflection gives us a small gain in
@@ -1873,8 +1889,16 @@ Proof.
     [nostutter]. *)
 
 Inductive nostutter {X:Type} : list X -> Prop :=
- (* FILL IN HERE *)
-.
+  | nostutter_nil : nostutter []
+  | nostutter_single : forall (x : X), nostutter (x :: [])
+  | nostutter_cons : forall (x y : X) (l : list X),
+      x <> y -> nostutter (y :: l) -> nostutter (x :: y :: l).
+
+(** Remark: Initially the last inductive deffinition was:
+    x <> y -> nostutter (x :: y :: l), but that will
+    create problems, since there's no garantee that
+    (y :: l) doesn't stutter **)
+
 (** Make sure each of these tests succeeds, but feel free to change
     the suggested proof (in comments) if the given one doesn't work
     for you.  Your definition might be different from ours and still
@@ -1886,34 +1910,22 @@ Inductive nostutter {X:Type} : list X -> Prop :=
     example with more basic tactics.)  *)
 
 Example test_nostutter_1: nostutter [3;1;4;1;5;6].
-(* FILL IN HERE *) Admitted.
-(* 
   Proof. repeat constructor; apply eqb_neq; auto.
   Qed.
-*)
 
 Example test_nostutter_2:  nostutter (@nil nat).
-(* FILL IN HERE *) Admitted.
-(* 
   Proof. repeat constructor; apply eqb_neq; auto.
   Qed.
-*)
 
 Example test_nostutter_3:  nostutter [5].
-(* FILL IN HERE *) Admitted.
-(* 
   Proof. repeat constructor; apply eqb_false; auto. Qed.
-*)
 
 Example test_nostutter_4:      not (nostutter [3;1;1;4]).
-(* FILL IN HERE *) Admitted.
-(* 
   Proof. intro.
   repeat match goal with
     h: nostutter _ |- _ => inversion h; clear h; subst
   end.
-  contradiction Hneq0; auto. Qed.
-*)
+  contradiction; auto. Qed.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_nostutter : option (nat*string) := None.
@@ -1990,7 +2002,34 @@ Definition manual_grade_for_filter_challenge : option (nat*string) := None.
        forall l, pal l -> l = rev l.
 *)
 
-(* FILL IN HERE *)
+Inductive pal {X:Type} : list X -> Prop :=
+  | pal_nil : pal []
+  | pal_single : forall (x : X), pal [x]
+  | pal_cons : forall (x : X) (l : list X),
+      pal l -> pal (x :: l ++ [x])
+.
+
+Theorem pal_app_rev : forall {X:Type} (l : list X), pal (l ++ rev l).
+Proof.
+  intros X l. induction l as [| n l' IHl'].
+  - simpl. apply pal_nil.
+  - simpl. rewrite app_assoc.
+    apply pal_cons.
+    apply IHl'.
+Qed.
+
+Theorem pal_rev: forall {X:Type} (l : list X),
+    pal l -> l = rev l.
+Proof.
+  intros X l H. induction H as [_ | x | x l' IH1 IH2].
+  - (* l = [] *)
+    reflexivity.
+  - (* l = [x] *)
+    reflexivity.
+  - (* l = x :: l' *)
+    simpl. rewrite rev_app_distr. simpl.
+    rewrite <- IH2. reflexivity.
+Qed.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_pal_pal_app_rev_pal_rev : option (nat*string) := None.
