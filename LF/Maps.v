@@ -261,7 +261,11 @@ Qed.
 Lemma t_update_shadow : forall (A : Type) (m : total_map A) x v1 v2,
     (x !-> v2 ; x !-> v1 ; m) = (x !-> v2 ; m).
 Proof.
-  intros A m x v1 v2.
+  intros A m x v1 v2. unfold t_update.
+  apply functional_extensionality. intros y.
+  destruct (eqb_string x y).
+  - reflexivity.
+  - reflexivity.
 Qed.
 (** [] *)
 
@@ -270,7 +274,7 @@ Qed.
     by proving a fundamental _reflection lemma_ relating the equality
     proposition on [id]s with the boolean function [eqb_id]. *)
 
-(** **** Exercise: 2 stars, standard, optional (eqb_stringP)  
+(** **** Exercise: 2 stars, standard, optional (eqb_stringP)
 
     Use the proof of [eqbP] in chapter [IndProp] as a template to
     prove the following: *)
@@ -278,7 +282,10 @@ Qed.
 Lemma eqb_stringP : forall x y : string,
     reflect (x = y) (eqb_string x y).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros x y. apply iff_reflect. split.
+  - intros H. apply eqb_string_true_iff. apply H.
+  - intros H. apply eqb_string_true_iff. apply H.
+Qed.
 (** [] *)
 
 (** Now, given [string]s [x1] and [x2], we can use the tactic
@@ -287,7 +294,7 @@ Proof.
     hypotheses about the equality (in the sense of [=]) of [x1]
     and [x2]. *)
 
-(** **** Exercise: 2 stars, standard (t_update_same)  
+(** **** Exercise: 2 stars, standard (t_update_same)
 
     With the example in chapter [IndProp] as a template, use
     [eqb_stringP] to prove the following theorem, which states that
@@ -297,10 +304,14 @@ Proof.
 Theorem t_update_same : forall (A : Type) (m : total_map A) x,
     (x !-> m x ; m) = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros A m x. apply functional_extensionality.
+  intros y. unfold t_update. destruct (eqb_string x y) eqn:H.
+  - apply f_equal. apply eqb_string_true_iff in H. apply H.
+  - reflexivity.
+Qed.
 (** [] *)
 
-(** **** Exercise: 3 stars, standard, recommended (t_update_permute)  
+(** **** Exercise: 3 stars, standard, recommended (t_update_permute)
 
     Use [eqb_stringP] to prove one final property of the [update]
     function: If we update a map [m] at two distinct keys, it doesn't
@@ -313,7 +324,15 @@ Theorem t_update_permute : forall (A : Type) (m : total_map A)
     =
     (x2 !-> v2 ; x1 !-> v1 ; m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros A m v1 v2 x1 x2 H. apply functional_extensionality.
+  intros x. unfold t_update. destruct (eqb_string x1 x) eqn:H0.
+  - apply eqb_string_true_iff in H0.
+    rewrite <- H0.
+    rewrite <- eqb_string_false_iff in H.
+    rewrite H.
+    reflexivity.
+  - reflexivity.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
