@@ -8,6 +8,8 @@ src=(
     "Tactics.v"
     "Logic.v"
     "IndProp.v"
+    "Maps.v"
+    "ProofObjects.v"
 )
 
 for i in "${src[@]}";do
