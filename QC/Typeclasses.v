@@ -16,12 +16,12 @@ Local Open Scope string.
        - [showBool : bool -> string]
        - [showNat : nat -> string]
        - etc.
-    
+
     plus combinators for structured types like [list] and pairs
- 
-       - [showList : {A : Type} 
+
+       - [showList : {A : Type}
                      (A -> string) -> (list A) -> string]
-       - [showPair : {A B : Type} 
+       - [showPair : {A B : Type}
                      (A -> string) -> (B -> string) -> A * B -> string]
 
     that take string converters for their element types as arguments.
@@ -42,10 +42,10 @@ Local Open Scope string.
 
     The designers of Haskell addressed this clunkiness through
     _typeclasses_, a mechanism by which the typechecker is instructed
-    to automatically construct "type-driven" functions 
-    [Wadler and Blott 1989] (in Bib.v). (Readers not already familiar with 
-    typeclasses should note that, although the word sounds a bit like 
-    "classes" from object-oriented programming, this apparent connection 
+    to automatically construct "type-driven" functions
+    [Wadler and Blott 1989] (in Bib.v). (Readers not already familiar with
+    typeclasses should note that, although the word sounds a bit like
+    "classes" from object-oriented programming, this apparent connection
     is rather misleading.  A better analogy is actually with _interfaces_
     from languages like Java.  But best of all is to set aside
     object-oriented preconceptions and try to approach typeclasses
@@ -56,7 +56,7 @@ Local Open Scope string.
     much richer than that of Haskell, and because typeclasses in Coq
     are used to automatically construct not only programs but also
     proofs, Coq's presentation of typeclasses is quite a bit less
-    "transparent": to use typeclasses effectively, one must have a 
+    "transparent": to use typeclasses effectively, one must have a
     fairly detailed understanding of how they are implemented.  Coq
     typeclasses are a power tool: they can make complex developments
     much more elegant and easy to manage when used properly, and they
@@ -85,7 +85,7 @@ Class Show A : Type :=
 (** The [Show] typeclass can be thought of as "classifying" types
     whose values can be converted to strings -- that is, types [A]
     such that we can define a function [show] of type [A -> string].
-    
+
     We can declare that [bool] is such a type by giving an [Instance]
     declaration that witnesses this function: *)
 
@@ -204,7 +204,11 @@ Compute (showTwo Red Green).
     of [showOne] or [showTwo]?  Try deleting them and see what
     happens. *)
 
-(** [] *)    
+(** Coq is unable to satisfy the constraints, i.e., there is no
+    guarantee that A or B will have an implementation of Show
+**)
+
+(** [] *)
 
 (** Of course, [Show] is not the only interesting typeclass.  There
     are many other situations where it is useful to be able to
@@ -226,7 +230,7 @@ Notation "x =? y" := (eqb x y) (at level 70).
 
 Instance eqBool : Eq bool :=
   {
-    eqb := fun (b c : bool) => 
+    eqb := fun (b c : bool) =>
        match b, c with
          | true, true => true
          | true, false => false
@@ -254,7 +258,32 @@ Instance eqNat : Eq nat :=
     checking equality makes perfect sense.  Write an [Eq] instance for
     this type. *)
 
-(* FILL IN HERE *)
+Fixpoint eq_bool_list (l m : list bool) : bool :=
+  match l with
+  | [] =>
+    match m with
+      | [] => true
+      | _ => false
+    end
+  | (h1 :: l') =>
+    match m with
+      | [] => false
+      | (h2 :: m') => andb (eqb h1 h2) (eq_bool_list l' m')
+    end
+  end.
+
+Definition eq_bool_arrow_bool (f g : (bool -> bool)) : bool :=
+  let x := [true; false] in
+  let h_aux := fun (h : (bool -> bool)) => map h x in
+  let listF := h_aux f in
+  let listG := h_aux g in
+  eq_bool_list listF listG.
+
+Instance boolArrowBool : Eq (bool -> bool) :=
+  {
+    eqb := eq_bool_arrow_bool
+  }.
+
 (** [] *)
 
 (* ================================================================= *)
@@ -269,7 +298,7 @@ Instance eqNat : Eq nat :=
 Instance showPair {A B : Type} `{Show A} `{Show B} : Show (A * B) :=
   {
     show p :=
-      let (a,b) := p in 
+      let (a,b) := p in
         "(" ++ show a ++ "," ++  show b ++ ")"
   }.
 
@@ -303,7 +332,29 @@ Instance showList {A : Type} `{Show A} : Show (list A) :=
 (** Write an [Eq] instance for lists and [Show] and [Eq] instances for
     the [option] type constructor. *)
 
-(* FILL IN HERE *)
+Fixpoint eq_list {A : Type} `{Eq A} (l1 l2 : list A) : bool :=
+  match l1 with
+    | nil =>
+      match l2 with
+        | nil => true
+        | _ => false
+      end
+    | (h1::t1) =>
+      match l2 with
+        | nil => false
+        | (h2::t2) =>
+          match (eqb h1 h2)  with
+            | true => eq_list t1 t2
+            | false => false
+          end
+      end
+  end.
+
+Instance eqList {A : Type} `{Eq A} (l1 l2 : list A) : Eq (list A) :=
+  {
+    eqb l1 l2 := eq_list l1 l2
+  }.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, optional (boolArrowA)  *)
