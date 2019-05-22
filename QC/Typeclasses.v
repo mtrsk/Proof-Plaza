@@ -258,6 +258,7 @@ Instance eqNat : Eq nat :=
     checking equality makes perfect sense.  Write an [Eq] instance for
     this type. *)
 
+(* Simple way to check if two lists of bools are equal *)
 Fixpoint eq_bool_list (l m : list bool) : bool :=
   match l with
   | [] =>
@@ -272,6 +273,9 @@ Fixpoint eq_bool_list (l m : list bool) : bool :=
     end
   end.
 
+(** Map f g with the arguments true and false
+    and compare if the outputs are equal.
+ **)
 Definition eq_bool_arrow_bool (f g : (bool -> bool)) : bool :=
   let x := [true; false] in
   let h_aux := fun (h : (bool -> bool)) => map h x in
@@ -350,9 +354,37 @@ Fixpoint eq_list {A : Type} `{Eq A} (l1 l2 : list A) : bool :=
       end
   end.
 
-Instance eqList {A : Type} `{Eq A} (l1 l2 : list A) : Eq (list A) :=
+Instance eqList {A : Type} `{Eq A} : Eq (list A) :=
   {
     eqb l1 l2 := eq_list l1 l2
+  }.
+
+Compute (eqb [1;2;3] [2;3]).
+
+Fixpoint show_optional {A : Type} `{Show A} (x : option A) : string :=
+  match x with
+    | None => ""
+    | Some n => show n
+  end.
+
+Instance showOpt {A : Type} `{Show A} : Show (option A) :=
+  {
+    show x := show_optional x
+  }.
+
+Compute (show (Some 42)).
+
+Fixpoint eq_optional {A : Type} `{Eq A} (m n : option A) : bool :=
+  match (m, n) with
+    | (None, None) => true
+    | (None, Some n') => false
+    | (Some m', None) => false
+    | (Some m', Some n') => eqb m' n'
+  end.
+
+Instance eqOpt {A : Type} `{Eq A} : Eq (option A) :=
+  {
+    eqb m n := eq_optional m n
   }.
 
 (** [] *)
@@ -362,7 +394,28 @@ Instance eqList {A : Type} `{Eq A} (l1 l2 : list A) : Eq (list A) :=
     an equality instance for any type of the form [bool->A], where [A]
     itself is an [Eq] type.  Show that it works for [bool->bool->nat]. *)
 
-(* FILL IN HERE *)
+Definition eq_bool_arrow_A {A : Type} `{Eq A} (f g : (bool -> A))
+  : bool :=
+  let x := [true; false] in
+  let h_aux := fun (h : (bool -> A)) => map h x in
+  let listF := h_aux f in
+  let listG := h_aux g in
+  eq_list listF listG.
+
+Compute (eq_bool_arrow_A (fun x => x) (fun y => true)).
+
+Instance eqBoolArrowA {A : Type} `{Eq A} : Eq (bool -> A) :=
+  {
+    eqb f g := eq_bool_arrow_A f g
+  }.
+
+(* Showing that it works on [bool->nat]  *)
+Compute (eqb (fun x : bool => if x then 1 else 2) (fun x : bool => 3)).
+(* Showing that it works on [bool->bool->nat]  *)
+Compute (
+    eqb (fun x : bool => (fun y : bool => if x then 1 else 0))
+        (fun x : bool => (fun y : bool => if x then 0 else 1))).
+
 (** [] *)
 
 (* ================================================================= *)
@@ -401,7 +454,7 @@ Check Ord.
 (** (The old class [Eq] is sometimes called a "superclass" of [Ord],
     but, again, this terminology is potentially confusing: Try to
     avoid thinking about analogies with object-oriented
-    programming!) *) 
+    programming!) *)
 
 (** When we define instances of [Ord], we just have to implement the
     [le] operation. *)
@@ -421,16 +474,80 @@ Definition max {A: Type} `{Eq A} `{Ord A} (x y : A) : A :=
 (** **** Exercise: 1 star (missingConstraintAgain)  *)
 (** What does Coq say if the [Ord] class constraint is left out of the
     definition of [max]?  What about the [Eq] class constraint? *)
-(** [] *)    
+
+(** Just Eq will break the constraints (le needs and Ord)
+    and calse and error:
+
+Definition max'' {A: Type} `{Eq A} (x y : A) : A :=
+  if le x y then y else x.
+
+
+Definition max' {A: Type} `{Ord A} (x y : A) : A :=
+  if le x y then y else x.
+
+Compute max' 5 4. (* => 5 *)
+Compute max' 4 4. (* => 4 *)
+
+Since nats are also an instance of Eq then this just
+works fine!
+
+**)
+
+(** [] *)
 
 (** **** Exercise: 3 stars (ordMisc)  *)
 (** Define [Ord] instances for options and pairs. *)
 
-(* FILL IN HERE *)
+Fixpoint ord_optional {A : Type} `{Eq A} `{Ord A} (m n : option A) :
+  bool :=
+  match (m, n) with
+    | (None, None) => true
+    | (Some m', None) => false
+    | (None, Some n') => true
+    | (Some m', Some n') => le m' n'
+  end.
+
+Compute (ord_optional (Some 5) None).
+
+Instance ordOpt {A : Type} `{Eq A} `{Ord A} : Ord (option A) :=
+  {
+    le m n := ord_optional m n
+  }.
+
+Instance ordPair {A : Type} `{Eq A} `{Ord A} :
+  Ord (A * A) :=
+  {
+    le m n :=
+      let (x1, y1) := m in
+      let (x2, y2) := n in
+      andb (le x1 x2) (le y1 y2)
+  }.
+
 (** [] *)
 
 (** **** Exercise: 3 stars (ordList)  *)
 (** For a little more practice, define an [Ord] instance for lists. *)
+
+Fixpoint ord_list {A : Type} `{Eq A} `{Ord A}
+  (l1 l2 : list A): bool :=
+  match (l1, l2) with
+    | (nil, nil) => true
+    | (_, nil) => false
+    | (nil, _) => true
+    | (h1::t1, h2::t2) =>
+      match le h1 h2 with
+        | true => ord_list t1 t2
+        | false => false
+      end
+  end.
+
+Instance ordList {A : Type} `{Eq A} `{Ord A} :
+  Ord (list A) :=
+  {
+    le l1 l2 := ord_list l1 l2
+  }.
+
+Compute (le [1;2;3] [1;2;9]).
 
 (* FILL IN HERE *)
 (** [] *)
@@ -463,7 +580,7 @@ Definition max {A: Type} `{Eq A} `{Ord A} (x y : A) : A :=
 (** To enable this behavior for a particular variable, say [A], we
     first declare [A] to be implicitly generalizable: *)
 
-Generalizable Variables A.  
+Generalizable Variables A.
 
 (** By default, Coq only implicitly generalizes variables declared in
     this way, to avoid puzzling behavior in case of typos.  There is
@@ -482,7 +599,7 @@ Definition showOne1 `{Show A} (a : A) : string :=
 
 Print showOne1.
 (* ==>
-    showOne1 = 
+    showOne1 =
       fun (A : Type) (H : Show A) (a : A) => "The value is " ++ show a
            : forall A : Type, Show A -> A -> string
 
@@ -537,9 +654,9 @@ Print showOne1.
 Print showOne2.
 Print showOne3.
 Print showOne4.
-(* ==> 
-    showOne = 
-        fun (A : Type) (H : Show A) (a : A) => 
+(* ==>
+    showOne =
+        fun (A : Type) (H : Show A) (a : A) =>
           "The value is " ++ @show A H a
       : forall A : Type, Show A -> A -> string
 *)
@@ -566,12 +683,12 @@ Definition max1 `{Ord A} (x y : A) :=
 Set Printing Implicit.
 Print max1.
 (* ==>
-     max1 = 
+     max1 =
        fun (A : Type) (H : Eq A) (H0 : @Ord A H) (x y : A) =>
          if @le A H H0 x y then y else x
 
-   : forall (A : Type) (H : Eq A), 
-       @Ord A H -> A -> A -> A    
+   : forall (A : Type) (H : Eq A),
+       @Ord A H -> A -> A -> A
 *)
 
 Check Ord.
@@ -608,8 +725,8 @@ Print implicit_fun.
 (** ... so we will need to use @ to actually apply the function: *)
 
 (* Compute (implicit_fun 2 3). *)
-(* ==> 
-    Error: Illegal application (Non-functional construction): 
+(* ==>
+    Error: Illegal application (Non-functional construction):
     The expression "implicit_fun" of type "nat"
     cannot be applied to the term
      "2" : "nat"
@@ -641,9 +758,9 @@ Record Point :=
     }.
 
 (** Internally, this declaration is desugared into a single-field
-    inductive type, roughly like this: 
+    inductive type, roughly like this:
 
-    Inductive Point : Set := 
+    Inductive Point : Set :=
       | Build_Point : nat -> nat -> Point.
 *)
 
@@ -659,7 +776,7 @@ Check (Build_Point 2 4).
 Check {| px := 2; py := 4 |}.
 Check {| py := 4; px := 2 |}.
 
-(** We can also access fields of a record using conventional "dot notation" 
+(** We can also access fields of a record using conventional "dot notation"
     (with slightly clunky concrete syntax): *)
 
 Definition r : Point := {| px := 2; py := 4 |}.
@@ -681,7 +798,7 @@ Record LabeledPoint (A : Type) :=
     type inference!) *)
 
 Check {| lx:=2; ly:=4; label:="hello" |}.
-(* ==> 
+(* ==>
      {| lx := 2; ly := 4; label := "hello" |}
         : LabeledPoint string
 *)
@@ -704,10 +821,10 @@ Check {| lx:=2; ly:=4; label:="hello" |}.
 
 Set Printing All.
 Print Show.
-(* ==> 
-    Record Show (A : Type) : Type := 
+(* ==>
+    Record Show (A : Type) : Type :=
       Build_Show
-        { show : A -> string } 
+        { show : A -> string }
 *)
 Unset Printing All.
 (** (If you run the [Print] command yourself, you'll see that [Show]
@@ -737,12 +854,12 @@ Print showNat.
 Set Printing All.
 Print show.
 (* ==>
-    show = 
+    show =
       fun (A : Type) (Show0 : Show A) =>
         match Show0 with
           | Build_Show _ show => show
         end
-   : forall (A : Type), Show A -> A -> string 
+   : forall (A : Type), Show A -> A -> string
 
    Arguments A, Show are implicit and maximally inserted  *)
 Unset Printing All.
@@ -755,7 +872,7 @@ Unset Printing All.
     typeclasses is the way appropriate instances are automatically
     inferred (and/or constructed!) during typechecking. *)
 
-(** For example, if we write [show 42], what we actually get is 
+(** For example, if we write [show 42], what we actually get is
     [@show nat showNat 42]: *)
 
 Definition eg42 := show 42.
@@ -856,15 +973,15 @@ Unset Typeclasses Debug.
     sense (and vice versa).
 *)
 
-Class EqDec (A : Type) {H : Eq A} := 
-  { 
-    eqb_eq : forall x y, x =? y = true <-> x = y 
+Class EqDec (A : Type) {H : Eq A} :=
+  {
+    eqb_eq : forall x y, x =? y = true <-> x = y
   }.
 
 (** To build an instance of [EqDec], we must now supply an appropriate
     proof. *)
 
-Instance eqdecNat : EqDec nat := 
+Instance eqdecNat : EqDec nat :=
   {
     eqb_eq := Nat.eqb_eq
   }.
@@ -875,7 +992,7 @@ Instance eqdecNat : EqDec nat :=
     proof mode and ask the user to use tactics to construct
     inhabitants for the remaining fields. *)
 
-Instance eqdecBool' : EqDec bool := 
+Instance eqdecBool' : EqDec bool :=
   {
   }.
 Proof.
@@ -901,7 +1018,7 @@ Defined.
 Lemma eqb_fact `{EqDec A} : forall (x y z : A),
   x =? y = true -> y =? z = true -> x = z.
 Proof.
-  intros x y z Exy Eyz. 
+  intros x y z Exy Eyz.
   rewrite eqb_eq in Exy.
   rewrite eqb_eq in Eyz.
   subst. reflexivity. Qed.
@@ -920,7 +1037,7 @@ Proof.
 Require Import Coq.Relations.Relation_Definitions.
 
 Class Reflexive (A : Type) (R : relation A) :=
-  { 
+  {
     reflexivity : forall x, R x x
   }.
 
@@ -931,7 +1048,7 @@ Class Transitive (A : Type) (R : relation A) :=
 
 Generalizable Variables z w R.
 
-Lemma trans3 : forall `{Transitive A R}, 
+Lemma trans3 : forall `{Transitive A R},
     `{R x y -> R y z -> R z w -> R x w}.
 Proof.
   intros.
@@ -946,7 +1063,7 @@ Class PreOrder (A : Type) (R : relation A) :=
     [Reflexive] and [Transitive] relation, so that, any time a
     reflexive relation is needed, a preorder can be used instead. *)
 
-Lemma trans3_pre : forall `{PreOrder A R}, 
+Lemma trans3_pre : forall `{PreOrder A R},
     `{R x y -> R y z -> R z w -> R x w}.
 Proof. intros. eapply trans3; eassumption. Defined.
 
@@ -1035,7 +1152,7 @@ Fixpoint All {T : Type} (P : T -> Prop) (l : list T) : Prop :=
     decidable proposition [P] into a boolean expression. *)
 
 Notation "P '?'" :=
-  (match (@dec P _) with 
+  (match (@dec P _) with
    | left _ => true
    | right _ => false
    end)
@@ -1100,7 +1217,7 @@ Open Scope monad_scope.
 (** The main definition provided by this library is the following typeclass:
 
     Class Monad (M : Type -> Type) : Type :=
-       { 
+       {
          ret : forall {T : Type}, T -> M T ;
          bind : forall {T U : Type}, M T -> (T -> M U) -> M U
        }.
@@ -1134,7 +1251,7 @@ Instance optionMonad : Monad option :=
     we can write
 
       x <- m1 ;; m2.
-]]  
+]]
     Or, if the result from [m1] is not needed in [m2], then instead of
 
       bind m1 (fun _ => m2),
@@ -1508,7 +1625,7 @@ Compute e3.
     a state of great peril: If we happen to ask for an instance that
     doesn't exist, the search procedure will diverge. *)
 
-(* 
+(*
 Definition e4 : list nat := mymap false.
 *)
 
@@ -1527,7 +1644,7 @@ Definition e4 : list nat := mymap false.
       - bare dependent records
       - modules and functors *)
 
-(** An introduction to canonical structures and 
+(** An introduction to canonical structures and
     comparisons between canonical structures and typeclasses can be
     found here:
 
