@@ -547,7 +547,7 @@ Instance ordList {A : Type} `{Eq A} `{Ord A} :
     le l1 l2 := ord_list l1 l2
   }.
 
-Compute (le [1;2;3] [1;2;9]).
+Compute (le [1;2;3;4] [1;2;9]).
 
 (* FILL IN HERE *)
 (** [] *)
@@ -898,7 +898,7 @@ Unset Printing Implicit.
     Show" in the output and have a look at the entries for [showNat]
     and [showPair]. *)
 
-(* Print HintDb typeclass_instances. *)
+Print HintDb typeclass_instances.
 (** [] *)
 
 (** We can see what's happening during the instance inference process
@@ -1424,7 +1424,7 @@ Instance baz2 : Show baz :=
   }.
 
 Compute (show (Baz 42)).
-(* ==> 
+(* ==>
      = "[42 is a Baz]"
      : string   *)
 
@@ -1440,7 +1440,7 @@ Compute (show (Baz 42)).
     instances. *)
 
 (** One way to deal with overlapping instances is to "curate" the hint
-    database by explicitly adding and removing specific instances.  
+    database by explicitly adding and removing specific instances.
 
     To remove things, use [Remove Hints]: *)
 
@@ -1453,7 +1453,7 @@ Remove Hints baz1 baz2 : typeclass_instances.
 
 Existing Instance baz1.
 Compute (show (Baz 42)).
-(* ==> 
+(* ==>
      = "Baz: 42"
      : string    *)
 
@@ -1479,7 +1479,7 @@ Instance baz4 : Show baz | 3 :=
   }.
 
 Compute (show (Baz 42)).
-(* ==> 
+(* ==>
      = "Use me first!  42"
      : string  *)
 
@@ -1495,7 +1495,7 @@ Compute (show (Baz 42)).
 
 Existing Instance baz1 | 0.
 Compute (show (Baz 42)).
-(* ==> 
+(* ==>
      = "Baz: 42"
      : string    *)
 
@@ -1594,7 +1594,7 @@ Instance MyMap1 : MyMap bool nat :=
 
 Instance MyMap2 : MyMap nat string :=
   {
-    mymap := fun n : nat => 
+    mymap := fun n : nat =>
       if le n 20 then "Pretty small" else "Pretty big"
   }.
 
@@ -1744,10 +1744,10 @@ Definition e4 : list nat := mymap false.
     this would be an error, but in Coq it just resolves to whatever
     the last globally defined instance was.
 
-    For example, say I write a function that uses a functor, but forget 
+    For example, say I write a function that uses a functor, but forget
     to mention the functor:
 
-   Definition foo (C D : Category) (x y : C) (f : x ~> y) 
+   Definition foo (C D : Category) (x y : C) (f : x ~> y)
               : fobj x ~> fobj y :=
      fmap f.
 
