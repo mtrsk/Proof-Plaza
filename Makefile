@@ -9,8 +9,6 @@ check_LF:
 check_QC:
 	./scripts/qc.sh
 
-#.ONESHELL:
-
 clean:
 	rm LF/*.vo
 	rm LF/*.glob
