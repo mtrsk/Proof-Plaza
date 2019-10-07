@@ -233,6 +233,7 @@ Definition ev_plus4'' (n : nat) (H : even n)
   ev_SS (S (S n)) (ev_SS n H).
 
 Check ev_plus4''.
+
 (* ===>
      : forall n : nat, even n -> even (4 + n) *)
 
@@ -252,8 +253,8 @@ Check ev_plus4''.
     [forall] where there is no dependency, i.e., no need to give a
     name to the type on the left-hand side of the arrow:
 
-           forall (x:nat), nat 
-        =  forall (_:nat), nat 
+           forall (x:nat), nat
+        =  forall (_:nat), nat
         =  nat -> nat
 *)
 
@@ -384,7 +385,7 @@ Definition and_comm'_aux P Q (H : P /\ Q) : Q /\ P :=
 Definition and_comm' P Q : P /\ Q <-> Q /\ P :=
   conj (and_comm'_aux P Q) (and_comm'_aux Q P).
 
-(** **** Exercise: 2 stars, standard, optional (conj_fact)  
+(** **** Exercise: 2 stars, standard, optional (conj_fact)
 
     Construct a proof object demonstrating the following proposition. *)
 

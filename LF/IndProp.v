@@ -2044,6 +2044,29 @@ Definition manual_grade_for_pal_pal_app_rev_pal_rev : option (nat*string) := Non
      forall l, l = rev l -> pal l.
 *)
 
+Fixpoint tl {X:Type} (l : list X) : list X :=
+  match l with
+    | nil => nil
+    | (h :: t) => t
+  end.
+
+Lemma pal_tail : forall {X:Type} (x : X) (l : list X),
+    pal (x :: l) -> pal (tl (rev l)).
+Proof.
+  intros X x l. induction l.
+  - intros _. simpl. apply pal_nil.
+  - intros H. inversion H.
+    rewrite H2. simpl.
+Abort.
+
+Theorem palindrome_converse : forall {X:Type} (l : list X),
+    l = rev l -> pal l.
+Proof.
+  intros X l. induction l as [|x l' IHl'].
+  - intros _. apply pal_nil.
+  - intros H. 
+Abort.
+
 (* FILL IN HERE 
 
     [] *)
@@ -2271,12 +2294,47 @@ Qed.
     critical observation behind the design of our regex matcher. So (1)
     take time to understand it, (2) prove it, and (3) look for how you'll
     use it later. *)
+
+  (* these might be useful latter *)
+Lemma app_ne_aux1 : forall (a : ascii) (s : list ascii),
+    a :: s = [] ++ a :: s.
+Proof. reflexivity. Qed.
+
+Lemma app_ne_aux2 : forall (a : ascii) (s0 s1 : list ascii),
+    a :: s0 ++ s1 = ([a] ++ s0) ++ s1.
+Proof. reflexivity. Qed.
+
 Lemma app_ne : forall (a : ascii) s re0 re1,
     a :: s =~ (App re0 re1) <->
     ([ ] =~ re0 /\ a :: s =~ re1) \/
     exists s0 s1, s = s0 ++ s1 /\ a :: s0 =~ re0 /\ s1 =~ re1.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  split.
+  - (* -> *)
+    intros H. apply app_exists in H.
+    (* 2 exists + 3 /\ Hypothesis *)
+    destruct H as [s0 [s1 [H0 [H1 H2]]]].
+    destruct s0.
+    + simpl in H0. left. split.
+      { apply H1. }
+      { rewrite H0. apply H2. }
+    + right. exists s0,s1. inversion H0. split.
+      { reflexivity. }
+      {
+        split.
+        - apply H1.
+        - apply H2.
+      }
+  - (* <- *)
+    intros H. destruct H as [[H0 H1] | [s0 [s1 [H0 [H1 H2]]]]].
+    + rewrite app_ne_aux1. apply MApp.
+      { apply H0. }
+      { apply H1. }
+    + rewrite H0. rewrite app_ne_aux2.
+      apply MApp.
+      { simpl. apply H1. }
+      { apply H2. }
+Qed.
 (** [] *)
 
 (** [s] matches [Union re0 re1] iff [s] matches [re0] or [s] matches [re1]. *)
@@ -2292,7 +2350,7 @@ Proof.
     + apply MUnionR. apply H.
 Qed.
 
-(** **** Exercise: 3 stars, standard, optional (star_ne)  
+(** **** Exercise: 3 stars, standard, optional (star_ne)
 
     [a::s] matches [Star re] iff [s = s0 ++ s1], where [a::s0] matches
     [re] and [s1] matches [Star re]. Like [app_ne], this observation is
@@ -2312,7 +2370,22 @@ Lemma star_ne : forall (a : ascii) s re,
     a :: s =~ Star re <->
     exists s0 s1, s = s0 ++ s1 /\ a :: s0 =~ re /\ s1 =~ Star re.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros a s re. split.
+  - intros.
+    remember (a::s) as s'. remember (Star re) as re'.
+    induction H.
+    + (* MEmpty *) discriminate Heqs'.
+    + (* MChar *) discriminate Heqre'.
+    + (* MApp *) discriminate Heqre'.
+    + (* MUnionL *) discriminate Heqre'.
+    + (* MUnionR *) discriminate Heqre'.
+    + (* MStar0 *) discriminate Heqs'.
+    + (* MStar1 *)
+      inversion Heqre'. destruct s1.
+      {
+        simpl in Heqs'. apply IHexp_match2 in Heqs'.
+Admitted.
+
 (** [] *)
 
 (** The definition of our regex matcher will include two fixpoint
